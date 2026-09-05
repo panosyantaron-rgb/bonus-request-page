@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bonus Request</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- User Page -->
+        <div id="userPage" style="display: none;">
+            <div class="card">
+                <div id="successMessage"></div>
+                <div id="form" class="form">
+                    <div class="header">
+                        <h1>Select Your Bonus</h1>
+                        <p>Choose a bonus offer and submit your request</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" class="input-field" placeholder="Your username" disabled>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="userId">User ID</label>
+                        <input type="text" id="userId" class="input-field" placeholder="Your ID" disabled>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Available Bonuses</label>
+                        <div id="bonusOptions" class="bonus-options">
+                            <p style="color: var(--color-text-secondary); font-size: 0.875rem;">Loading bonuses...</p>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button class="btn btn-primary" onclick="submitRequest()">Submit Request</button>
+                        <button class="btn btn-secondary" onclick="resetForm()">Clear</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Login Page -->
+        <div id="loginPage" style="display: none;">
+            <div class="card">
+                <div class="header">
+                    <h1>Admin Access</h1>
+                    <p>Enter your password to manage bonuses</p>
+                </div>
+
+                <div id="loginMessage"></div>
+
+                <form class="login-form" onsubmit="handleAdminLogin(event)">
+                    <input
+                        type="password"
+                        id="adminPassword"
+                        placeholder="Admin Password"
+                        autocomplete="off"
+                        autofocus
+                    >
+                    <button type="submit" class="btn btn-primary">Access Admin Panel</button>
+                </form>
+
+                <a href="/" class="back-link">← Back to Bonus Request</a>
+            </div>
+        </div>
+
+        <!-- Admin Panel Page -->
+        <div id="adminPage" style="display: none;">
+            <div class="card" style="background-color: var(--color-admin-bg);">
+                <div class="admin-toolbar">
+                    <h2>Admin Panel</h2>
+                    <button class="logout-btn" onclick="logoutAdmin()">Logout</button>
+                </div>
+
+                <div id="adminMessage"></div>
+
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="switchTab('bonuses')">Bonuses</button>
+                    <button class="tab-btn" onclick="switchTab('requests')">Requests</button>
+                </div>
+
+                <!-- Bonuses Tab -->
+                <div id="bonuses-tab" class="tab-content active">
+                    <div class="admin-form">
+                        <input type="text" id="bonusName" placeholder="Bonus name (e.g., Welcome Bonus)" style="flex: 1;">
+                        <input type="text" id="bonusDesc" placeholder="Description" style="flex: 1;">
+                        <button class="btn-add" onclick="addBonus()">Add</button>
+                    </div>
+                    <div id="bonusList" class="bonus-list"></div>
+                </div>
+
+                <!-- Requests Tab -->
+                <div id="requests-tab" class="tab-content">
+                    <div class="export-buttons">
+                        <button class="btn-export" onclick="exportCSV()">Export CSV</button>
+                        <button class="btn-export" onclick="exportJSON()">Export JSON</button>
+                        <button class="btn-clear" onclick="clearAllRequests()">Clear All</button>
+                    </div>
+                    <div id="requestsList" class="bonus-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
