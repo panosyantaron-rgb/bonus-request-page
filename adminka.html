@@ -1,0 +1,559 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Admin Panel - Bonus Management</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap">
+  <style>
+    :root {
+      --color-bg: #0f1419;
+      --color-surface: #1a1f2e;
+      --color-surface-alt: #252d3d;
+      --color-text: #ffffff;
+      --color-text-secondary: #a0aac0;
+      --color-accent: #00d9ff;
+      --color-accent-dark: #0099cc;
+      --color-border: #2a3244;
+      --color-success: #00ff00;
+      --color-danger: #ff6b6b;
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root:not([data-theme="dark"]) {
+        --color-bg: #f8f9fc;
+        --color-surface: #ffffff;
+        --color-surface-alt: #f0f3f8;
+        --color-text: #0f1419;
+        --color-text-secondary: #4a5568;
+        --color-accent: #00a8cc;
+        --color-accent-dark: #0078a0;
+        --color-border: #e2e8f0;
+      }
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--color-bg);
+      color: var(--color-text);
+      overflow-x: hidden;
+    }
+
+    /* Login Screen */
+    #loginModal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(15, 20, 25, 0.95);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      backdrop-filter: blur(4px);
+    }
+
+    .login-box {
+      background: linear-gradient(135deg, #1a1f2e 0%, #252d3d 100%);
+      border: 1px solid var(--color-accent);
+      border-radius: 12px;
+      padding: 40px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(0, 217, 255, 0.2);
+    }
+
+    .login-box h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: var(--color-accent);
+    }
+
+    .login-box p {
+      color: var(--color-text-secondary);
+      font-size: 14px;
+      margin-bottom: 30px;
+    }
+
+    .login-box input {
+      width: 100%;
+      padding: 12px 16px;
+      background: #0f1419;
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      color: var(--color-text);
+      font-size: 14px;
+      margin-bottom: 12px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .login-box button {
+      width: 100%;
+      padding: 12px 16px;
+      background: var(--color-accent);
+      border: none;
+      border-radius: 8px;
+      color: #0f1419;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      font-family: 'Poppins', sans-serif;
+      transition: all 0.3s ease;
+    }
+
+    .login-box button:hover {
+      background: var(--color-accent-dark);
+    }
+
+    .login-error {
+      color: var(--color-danger);
+      font-size: 12px;
+      margin-top: 12px;
+      display: none;
+    }
+
+    /* Admin Panel */
+    #adminPanel {
+      display: none;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    #adminPanel.show {
+      display: block;
+    }
+
+    .admin-header {
+      background: linear-gradient(135deg, var(--color-surface) 0%, var(--color-surface-alt) 100%);
+      padding: 30px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border: 1px solid var(--color-border);
+    }
+
+    .admin-header h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--color-accent);
+    }
+
+    .admin-header .user-info {
+      text-align: right;
+    }
+
+    .admin-header .user-info p {
+      color: var(--color-text-secondary);
+      font-size: 14px;
+    }
+
+    .logout-btn {
+      padding: 10px 20px;
+      background: var(--color-danger);
+      border: none;
+      border-radius: 8px;
+      color: #ffffff;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Poppins', sans-serif;
+      margin-top: 10px;
+    }
+
+    .logout-btn:hover {
+      opacity: 0.8;
+    }
+
+    .admin-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 30px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .admin-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      padding: 24px;
+      transition: all 0.3s ease;
+    }
+
+    .admin-card:hover {
+      border-color: var(--color-accent);
+      box-shadow: 0 10px 30px rgba(0, 217, 255, 0.1);
+    }
+
+    .admin-card h2 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: var(--color-accent);
+    }
+
+    .stat-box {
+      background: rgba(0, 217, 255, 0.1);
+      border-left: 4px solid var(--color-accent);
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--color-accent);
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--color-text-secondary);
+      margin-top: 4px;
+    }
+
+    .claims-list {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .claim-item {
+      background: rgba(0, 217, 255, 0.05);
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      border-left: 3px solid var(--color-success);
+    }
+
+    .claim-user {
+      font-weight: 600;
+      color: var(--color-text);
+      font-size: 14px;
+    }
+
+    .claim-bonus {
+      font-size: 12px;
+      color: var(--color-accent);
+      margin-top: 4px;
+    }
+
+    .claim-time {
+      font-size: 11px;
+      color: var(--color-text-secondary);
+      margin-top: 4px;
+    }
+
+    .bonus-form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .bonus-form input, .bonus-form textarea {
+      padding: 10px 12px;
+      background: #0f1419;
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      color: var(--color-text);
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+    }
+
+    .bonus-form button {
+      padding: 10px 16px;
+      background: var(--color-accent);
+      border: none;
+      border-radius: 8px;
+      color: #0f1419;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Poppins', sans-serif;
+      transition: all 0.3s ease;
+    }
+
+    .bonus-form button:hover {
+      background: var(--color-accent-dark);
+    }
+
+    .bonuses-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .bonus-item {
+      background: rgba(0, 217, 255, 0.05);
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--color-border);
+      font-size: 12px;
+    }
+
+    .bonus-item-title {
+      font-weight: 600;
+      color: var(--color-accent);
+      margin-bottom: 4px;
+    }
+
+    .bonus-item-amount {
+      color: var(--color-success);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    @media (max-width: 768px) {
+      .admin-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .admin-header {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .admin-header .user-info {
+        text-align: center;
+        margin-top: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Login Modal -->
+<div id="loginModal">
+  <div class="login-box">
+    <h1>🔐 Admin Login</h1>
+    <p>Enter admin credentials to access the panel</p>
+    <input type="text" id="adminUser" placeholder="Admin Username" />
+    <input type="password" id="adminPass" placeholder="Admin Password" />
+    <button onclick="adminLogin()">Login</button>
+    <div class="login-error" id="loginError">Invalid credentials</div>
+  </div>
+</div>
+
+<!-- Admin Panel -->
+<div id="adminPanel">
+  <div class="admin-header">
+    <div>
+      <h1>⚙️ Admin Panel</h1>
+    </div>
+    <div class="user-info">
+      <p>Logged in as: <strong id="adminUsername">Admin</strong></p>
+      <button class="logout-btn" onclick="adminLogout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="admin-grid">
+    <!-- Statistics Card -->
+    <div class="admin-card">
+      <h2>📊 Statistics</h2>
+      <div class="stat-box">
+        <div class="stat-value" id="totalClaims">0</div>
+        <div class="stat-label">Total Bonuses Claimed</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value" id="totalUsers">0</div>
+        <div class="stat-label">Unique Users</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value" id="totalBonuses">9</div>
+        <div class="stat-label">Available Bonuses</div>
+      </div>
+    </div>
+
+    <!-- Recent Claims Card -->
+    <div class="admin-card">
+      <h2>🎁 Recent Claims</h2>
+      <div class="claims-list" id="claimsList">
+        <p style="color: var(--color-text-secondary); font-size: 12px;">No claims yet</p>
+      </div>
+    </div>
+
+    <!-- Add Bonus Card -->
+    <div class="admin-card">
+      <h2>➕ Add New Bonus</h2>
+      <form class="bonus-form">
+        <input type="text" id="bonusTitle" placeholder="Bonus Title" />
+        <input type="text" id="bonusAmount" placeholder="Bonus Amount (e.g., +100%)" />
+        <textarea id="bonusDescription" placeholder="Description" rows="2"></textarea>
+        <select id="bonusCategory" style="padding: 10px 12px; background: #0f1419; border: 1px solid var(--color-border); border-radius: 8px; color: var(--color-text); font-family: 'Inter', sans-serif; font-size: 13px;">
+          <option value="sport">Sport</option>
+          <option value="casino">Casino</option>
+          <option value="livecasino">Live Casino</option>
+        </select>
+        <button type="button" onclick="addBonus()">Add Bonus</button>
+      </form>
+    </div>
+
+    <!-- Bonuses List Card -->
+    <div class="admin-card">
+      <h2>💎 Current Bonuses</h2>
+      <div class="bonuses-list" id="bonusesList"></div>
+    </div>
+
+    <!-- System Info Card -->
+    <div class="admin-card">
+      <h2>ℹ️ System Info</h2>
+      <div class="stat-box">
+        <div class="stat-label">Status</div>
+        <div style="color: var(--color-success); font-weight: 600; margin-top: 4px;">✓ Online</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Database</div>
+        <div style="color: var(--color-accent); font-weight: 600; margin-top: 4px;">Local Storage</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Last Updated</div>
+        <div style="color: var(--color-text-secondary); margin-top: 4px;" id="lastUpdate">Now</div>
+      </div>
+    </div>
+
+    <!-- Bonus Distribution Card -->
+    <div class="admin-card">
+      <h2>📈 Bonus Distribution</h2>
+      <div id="distribution">
+        <div class="stat-box">
+          <div class="stat-label">Sport Bonuses</div>
+          <div style="color: var(--color-accent); font-weight: 600; margin-top: 4px;" id="sportCount">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Casino Bonuses</div>
+          <div style="color: var(--color-accent); font-weight: 600; margin-top: 4px;" id="casinoCount">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Live Casino Bonuses</div>
+          <div style="color: var(--color-accent); font-weight: 600; margin-top: 4px;" id="livecasinoCount">0</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const ADMIN_USER = "admin";
+const ADMIN_PASS = "admin123";
+
+let isLoggedIn = false;
+let claims = [];
+let bonuses = [
+  { title: "Welcome Bonus", amount: "+100%", description: "Match bonus on your first bet", category: "sport" },
+  { title: "Weekly Cashback", amount: "+5%", description: "Get cash back on all sports bets", category: "sport" },
+  { title: "Parlay Boost", amount: "+25%", description: "Enhanced odds on parlay bets", category: "sport" },
+  { title: "Casino Welcome", amount: "+150%", description: "Bonus plus free spins", category: "casino" },
+  { title: "Daily Reload", amount: "+50%", description: "Get bonus every day", category: "casino" },
+  { title: "VIP Rewards", amount: "+200%", description: "Exclusive VIP member benefits", category: "casino" },
+  { title: "Live Welcome", amount: "+120%", description: "Play with live dealers instantly", category: "livecasino" },
+  { title: "High Roller", amount: "+250%", description: "For big bet players", category: "livecasino" },
+  { title: "Table Master", amount: "+180%", description: "Exclusive live table access", category: "livecasino" }
+];
+
+function adminLogin() {
+  const user = document.getElementById("adminUser").value.trim();
+  const pass = document.getElementById("adminPass").value.trim();
+  const error = document.getElementById("loginError");
+
+  if (user === ADMIN_USER && pass === ADMIN_PASS) {
+    isLoggedIn = true;
+    document.getElementById("adminUsername").textContent = user;
+    document.getElementById("loginModal").style.display = "none";
+    document.getElementById("adminPanel").classList.add("show");
+    loadDashboard();
+  } else {
+    error.style.display = "block";
+    setTimeout(() => error.style.display = "none", 3000);
+  }
+}
+
+function adminLogout() {
+  isLoggedIn = false;
+  document.getElementById("adminUser").value = "";
+  document.getElementById("adminPass").value = "";
+  document.getElementById("loginModal").style.display = "flex";
+  document.getElementById("adminPanel").classList.remove("show");
+}
+
+function addBonus() {
+  const title = document.getElementById("bonusTitle").value.trim();
+  const amount = document.getElementById("bonusAmount").value.trim();
+  const description = document.getElementById("bonusDescription").value.trim();
+  const category = document.getElementById("bonusCategory").value;
+
+  if (!title || !amount || !description) {
+    alert("Please fill in all fields");
+    return;
+  }
+
+  bonuses.push({ title, amount, description, category });
+  document.getElementById("bonusTitle").value = "";
+  document.getElementById("bonusAmount").value = "";
+  document.getElementById("bonusDescription").value = "";
+
+  loadDashboard();
+  alert("✓ Bonus added successfully!");
+}
+
+function addClaim(username, bonus) {
+  claims.push({
+    username,
+    bonus: bonus.title,
+    amount: bonus.amount,
+    timestamp: new Date().toLocaleString()
+  });
+  loadDashboard();
+}
+
+function loadDashboard() {
+  const uniqueUsers = new Set(claims.map(c => c.username)).size;
+  document.getElementById("totalClaims").textContent = claims.length;
+  document.getElementById("totalUsers").textContent = uniqueUsers;
+
+  const claimsList = document.getElementById("claimsList");
+  if (claims.length === 0) {
+    claimsList.innerHTML = '<p style="color: var(--color-text-secondary); font-size: 12px;">No claims yet</p>';
+  } else {
+    claimsList.innerHTML = claims.slice(-10).reverse().map(claim => `
+      <div class="claim-item">
+        <div class="claim-user">${claim.username}</div>
+        <div class="claim-bonus">${claim.bonus} ${claim.amount}</div>
+        <div class="claim-time">${claim.timestamp}</div>
+      </div>
+    `).join("");
+  }
+
+  const bonusesList = document.getElementById("bonusesList");
+  bonusesList.innerHTML = bonuses.map(bonus => `
+    <div class="bonus-item">
+      <div class="bonus-item-title">${bonus.title}</div>
+      <div class="bonus-item-amount">${bonus.amount}</div>
+      <div style="font-size: 11px; color: var(--color-text-secondary); margin-top: 4px;">${bonus.category}</div>
+    </div>
+  `).join("");
+
+  const sportCount = bonuses.filter(b => b.category === "sport").length;
+  const casinoCount = bonuses.filter(b => b.category === "casino").length;
+  const livecasinoCount = bonuses.filter(b => b.category === "livecasino").length;
+
+  document.getElementById("sportCount").textContent = sportCount;
+  document.getElementById("casinoCount").textContent = casinoCount;
+  document.getElementById("livecasinoCount").textContent = livecasinoCount;
+  document.getElementById("lastUpdate").textContent = new Date().toLocaleTimeString();
+}
+
+// Initialize
+loadDashboard();
+</script>
+
+</body>
+</html>
