@@ -2,12 +2,8 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <script src="./support.js"></script>
+  <title>Bonus Request Page</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap">
-</head>
-<body>
-<x-dc>
-<helmet>
   <style>
     :root {
       --color-bg: #0f1419;
@@ -53,258 +49,463 @@
       scrollbar-width: none;
     }
     
-    body::-webkit-scrollbar {
-      display: none;
+    body::-webkit-scrollbar { display: none; }
+
+    .slider-section {
+      position: relative;
+      height: 600px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      background: linear-gradient(135deg, var(--color-surface) 0%, var(--color-surface-alt) 100%);
     }
 
-    #errorContainer {
-      position: fixed;
-      top: 0;
-      left: 0;
+    .slider-title-top {
+      font-family: 'Poppins', sans-serif;
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--color-accent);
+      margin-bottom: 40px;
+      text-align: center;
+    }
+
+    .slider-carousel {
+      position: relative;
+      width: 100%;
+      max-width: 900px;
+      height: 400px;
+      perspective: 1000px;
+    }
+
+    .carousel-container {
+      position: absolute;
       width: 100%;
       height: 100%;
-      background: rgba(15, 20, 25, 0.95);
+      transform-style: preserve-3d;
+      top: 0;
+      left: 0;
+    }
+
+    .carousel-item {
+      position: absolute;
+      width: 220px;
+      height: 280px;
+      left: 50%;
+      top: 50%;
+      transform-style: preserve-3d;
+      transform: translateX(var(--translate-x, 0)) translateY(-50%) rotateY(var(--rotate-y, 0)) rotateZ(var(--rotate-z, 0)) scale(var(--scale, 1));
+      transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+      opacity: var(--opacity, 0.5);
+      z-index: var(--z-index, 1);
+      margin-left: -110px;
+    }
+
+    .carousel-item[data-position="0"] { 
+      --translate-x: -600px;
+      --rotate-y: 60deg;
+      --rotate-z: -12deg;
+      --scale: 0.65;
+      --opacity: 0.5;
+      --z-index: 1;
+    }
+
+    .carousel-item[data-position="1"] {
+      --translate-x: -300px;
+      --rotate-y: 30deg;
+      --rotate-z: -6deg;
+      --scale: 0.8;
+      --opacity: 0.7;
+      --z-index: 3;
+    }
+
+    .carousel-item[data-position="2"] {
+      --translate-x: 0px;
+      --rotate-y: 0deg;
+      --rotate-z: 0deg;
+      --scale: 1;
+      --opacity: 1;
+      --z-index: 10;
+    }
+
+    .carousel-item[data-position="3"] {
+      --translate-x: 300px;
+      --rotate-y: -30deg;
+      --rotate-z: 6deg;
+      --scale: 0.8;
+      --opacity: 0.7;
+      --z-index: 3;
+    }
+
+    .carousel-item[data-position="4"] {
+      --translate-x: 600px;
+      --rotate-y: -60deg;
+      --rotate-z: 12deg;
+      --scale: 0.65;
+      --opacity: 0.5;
+      --z-index: 1;
+    }
+
+    .carousel-item > div {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 20px;
       display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 9999;
-      backdrop-filter: blur(4px);
+      font-size: 80px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      border: 2px solid var(--color-accent);
     }
 
-    .error-box {
-      background: linear-gradient(135deg, #1a1f2e 0%, #252d3d 100%);
-      border: 2px solid #ff6b6b;
-      border-radius: 12px;
-      padding: 40px;
-      width: 100%;
-      max-width: 450px;
+    .slider-content {
+      position: absolute;
+      bottom: -120px;
+      left: 50%;
+      transform: translateX(-50%);
       text-align: center;
-      box-shadow: 0 8px 32px rgba(255, 107, 107, 0.3);
+      width: 100%;
     }
 
-    .error-box h1 {
+    .slider-title {
       font-family: 'Poppins', sans-serif;
-      font-size: 32px;
+      font-size: 36px;
       font-weight: 700;
-      color: #ff6b6b;
+      color: var(--color-text);
+      margin-bottom: 10px;
+    }
+
+    .slider-subtitle {
+      font-size: 16px;
+      color: var(--color-text-secondary);
+      margin-bottom: 20px;
+    }
+
+    .slider-dots {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--color-border);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .dot.active {
+      background: var(--color-accent);
+      width: 30px;
+      border-radius: 5px;
+    }
+
+    .categories-section {
+      padding: 80px 20px 40px;
+      background: var(--color-bg);
+    }
+
+    .categories-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .category-tabs {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .category-tab {
+      padding: 12px 32px;
+      background: transparent;
+      border: 2px solid var(--color-border);
+      border-radius: 8px;
+      color: var(--color-text);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: 'Poppins', sans-serif;
+      font-size: 14px;
+    }
+
+    .category-tab:hover {
+      border-color: var(--color-accent);
+      color: var(--color-accent);
+    }
+
+    .category-tab.active {
+      background: var(--color-accent);
+      border-color: var(--color-accent);
+      color: #0f1419;
+    }
+
+    .content-section {
+      padding: 40px 20px;
+      background: var(--color-bg);
+    }
+
+    .content-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .bonus-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 30px;
+      margin-bottom: 40px;
+    }
+
+    .bonus-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      animation: slideInUp 0.6s ease forwards;
+    }
+
+    @keyframes slideInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .bonus-card[data-hidden="true"] {
+      display: none;
+    }
+
+    .bonus-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 20px 40px rgba(0, 217, 255, 0.2);
+      border-color: var(--color-accent);
+    }
+
+    .card-image {
+      height: 180px;
+      background: linear-gradient(135deg, var(--color-surface-alt) 0%, var(--color-surface) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .card-image-placeholder {
+      font-size: 60px;
+      text-align: center;
+    }
+
+    .card-content {
+      padding: 24px;
+    }
+
+    .card-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--color-text);
+      margin-bottom: 8px;
+    }
+
+    .card-description {
+      font-size: 14px;
+      color: var(--color-text-secondary);
       margin-bottom: 16px;
     }
 
-    .error-box p {
-      color: #a0aac0;
-      font-size: 16px;
-      line-height: 1.6;
-      margin-bottom: 24px;
+    .card-amount {
+      font-family: 'Poppins', sans-serif;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--color-accent);
     }
 
-    .error-code {
-      background: #0f1419;
-      border: 1px solid #2a3244;
-      border-radius: 8px;
-      padding: 16px;
-      margin-bottom: 24px;
-      font-family: 'Courier New', monospace;
-      font-size: 14px;
-      color: #00d9ff;
-      word-break: break-all;
+    .action-buttons {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
     }
 
-    .error-button {
-      display: inline-block;
-      padding: 12px 32px;
-      background: #ff6b6b;
+    .btn {
+      padding: 14px 40px;
       border: none;
       border-radius: 8px;
-      color: #ffffff;
+      font-family: 'Poppins', sans-serif;
       font-weight: 600;
       font-size: 14px;
       cursor: pointer;
-      font-family: 'Poppins', sans-serif;
       transition: all 0.3s ease;
-      text-decoration: none;
     }
 
-    .error-button:hover {
-      background: #ff5252;
-      transform: translateY(-2px);
+    .btn-primary {
+      background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-dark) 100%);
+      color: #0f1419;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(0, 217, 255, 0.3);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      border: 2px solid var(--color-accent);
+      color: var(--color-accent);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(0, 217, 255, 0.1);
+    }
+
+    @media (max-width: 768px) {
+      .slider-section { height: 400px; }
+      .carousel-item { width: 160px; height: 200px; }
+      .slider-title { font-size: 24px; }
+      .bonus-cards { grid-template-columns: 1fr; gap: 20px; }
+      .category-tabs { gap: 10px; }
+      .category-tab { padding: 10px 20px; font-size: 12px; }
     }
   </style>
-</helmet>
+</head>
+<body>
 
-  <div id="errorContainer" style="display: none;">
-    <div class="error-box">
-      <h1>❌ Access Denied</h1>
-      <p>Missing or invalid authentication parameters</p>
-      <div class="error-code" id="errorDetails"></div>
-      <button class="error-button" onclick="window.location.reload()">Try Again</button>
+<div class="slider-section">
+  <h2 class="slider-title-top">Our Bonuses</h2>
+  <div class="slider-carousel">
+    <div class="carousel-container">
+      <div class="carousel-item" data-position="0"><div>⚽</div></div>
+      <div class="carousel-item" data-position="1"><div>🎰</div></div>
+      <div class="carousel-item" data-position="2"><div>🎲</div></div>
+      <div class="carousel-item" data-position="3"><div>🏆</div></div>
+      <div class="carousel-item" data-position="4"><div>💎</div></div>
     </div>
-  </div>
-
-  <div id="mainContent" style="display: none;">
-
-  <!-- Username/ID Validation Modal -->
-  <div id="validationModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 20, 25, 0.95); display: flex; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(4px);">
-    <div style="background: linear-gradient(135deg, #1a1f2e 0%, #252d3d 100%); border: 1px solid #00d9ff; border-radius: 12px; padding: 40px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 8px 32px rgba(0, 217, 255, 0.2);">
-      <h2 style="color: #ffffff; font-family: 'Poppins', sans-serif; font-size: 28px; font-weight: 700; margin-bottom: 12px;">Access Required</h2>
-      <p style="color: #a0aac0; font-size: 14px; margin-bottom: 30px;">Enter your username and ID to continue</p>
-      <input type="text" id="username" placeholder="Username" style="width: 100%; padding: 12px 16px; background: #0f1419; border: 1px solid #2a3244; border-radius: 8px; color: #ffffff; font-size: 14px; font-family: 'Inter', sans-serif; margin-bottom: 12px;" />
-      <input type="text" id="userID" placeholder="User ID" style="width: 100%; padding: 12px 16px; background: #0f1419; border: 1px solid #2a3244; border-radius: 8px; color: #ffffff; font-size: 14px; font-family: 'Inter', sans-serif; margin-bottom: 12px;" />
-      <button id="validateBtn" style="width: 100%; padding: 12px 16px; background: #00d9ff; border: none; border-radius: 8px; color: #0f1419; font-weight: 600; font-size: 14px; cursor: pointer; font-family: 'Poppins', sans-serif; transition: all 0.3s ease;">Continue</button>
-      <p id="errorMsg" style="color: #ff6b6b; font-size: 12px; margin-top: 12px; display: none;"></p>
-    </div>
-  </div>
-
-  <div id="mainContent" style="display: none;">
-  <div class="slider-section">
-    <h2 class="slider-title-top">Our Bonuses</h2>
-    <div class="slider-carousel">
-      <div class="carousel-container">
-        <div class="carousel-item" data-position="0"><div>⚽</div></div>
-        <div class="carousel-item" data-position="1"><div>🎰</div></div>
-        <div class="carousel-item" data-position="2"><div>🎲</div></div>
-        <div class="carousel-item" data-position="3"><div>🏆</div></div>
-        <div class="carousel-item" data-position="4"><div>💎</div></div>
-      </div>
-      <div class="slider-content">
-        <h1 class="slider-title">Claim Your Bonus</h1>
-        <p class="slider-subtitle">Select a bonus offer and start winning today</p>
-        <div class="slider-dots">
-          <div class="dot active"></div>
-          <div class="dot"></div>
-          <div class="dot"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Categories Section -->
-  <div class="categories-section">
-    <div class="categories-container">
-      <div class="category-tabs">
-        <button class="category-tab active" onclick="switchCategory(this)">Sport</button>
-        <button class="category-tab" onclick="switchCategory(this)">Casino</button>
-        <button class="category-tab" onclick="switchCategory(this)">Live Casino</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Bonus Cards Section -->
-  <div class="content-section">
-    <div class="content-container">
-      <div class="bonus-cards">
-        <!-- Sport Bonuses -->
-        <div class="bonus-card" data-category="sport">
-          <div class="card-image">
-            <div class="card-image-placeholder">⚽</div>
-          </div>
-          <div class="card-content">
-            <h3 class="card-title">Welcome Bonus</h3>
-            <p class="card-description">Match bonus on your first bet</p>
-            <div class="card-amount">+100%</div>
-          </div>
-        </div>
-
-        <div class="bonus-card" data-category="sport">
-          <div class="card-image">
-            <div class="card-image-placeholder">🏅</div>
-          </div>
-          <div class="card-content">
-            <h3 class="card-title">Weekly Cashback</h3>
-            <p class="card-description">Get cash back on all sports bets</p>
-            <div class="card-amount">+5%</div>
-          </div>
-        </div>
-
-        <div class="bonus-card" data-category="sport">
-          <div class="card-image">
-            <div class="card-image-placeholder">🎯</div>
-          </div>
-          <div class="card-content">
-            <h3 class="card-title">Parlay Boost</h3>
-            <p class="card-description">Enhanced odds on parlay bets</p>
-            <div class="card-amount">+25%</div>
-          </div>
-        </div>
-
-        <!-- Casino Bonuses -->
-        <div class="bonus-card" data-category="casino" data-hidden="true">
-          <div class="card-image">
-            <div class="card-image-placeholder">🎰</div>
-          </div>
-          <div class="card-content">
-            <h3 class="card-title">Casino Welcome</h3>
-            <p class="card-description">Bonus plus free spins</p>
-            <div class="card-amount">+150%</div>
-          </div>
-        </div>
-
-        <div class="bonus-card" data-category="casino" data-hidden="true">
-          <div class="card-image">
-            <div class="card-image-placeholder">💰</div>
-          </div>
-          <div class="card-content">
-            <h3 class="card-title">Daily Reload</h3>
-            <p class="card-description">Get bonus every day</p>
-            <div class="card-amount">+50%</div>
-          </div>
-        </div>
-
-        <div class="bonus-card" data-category="casino" data-hidden="true">
-          <div class="card-image">
-            <div class="card-image-placeholder">🎁</div>
-          </div>
-          <div class="card-content">
-            <h3 class="card-title">VIP Rewards</h3>
-            <p class="card-description">Exclusive VIP member benefits</p>
-            <div class="card-amount">+200%</div>
-          </div>
-        </div>
-
-        <!-- Live Casino Bonuses -->
-        <div class="bonus-card" data-category="livecasino" data-hidden="true">
-          <div class="card-image">
-            <div class="card-image-placeholder">🃏</div>
-          </div>
-          <div class="card-content">
-            <h3 class="card-title">Live Welcome</h3>
-            <p class="card-description">Play with live dealers instantly</p>
-            <div class="card-amount">+120%</div>
-          </div>
-        </div>
-
-        <div class="bonus-card" data-category="livecasino" data-hidden="true">
-          <div class="card-image">
-            <div class="card-image-placeholder">👑</div>
-          </div>
-          <div class="card-content">
-            <h3 class="card-title">High Roller</h3>
-            <p class="card-description">For big bet players</p>
-            <div class="card-amount">+250%</div>
-          </div>
-        </div>
-
-        <div class="bonus-card" data-category="livecasino" data-hidden="true">
-          <div class="card-image">
-            <div class="card-image-placeholder">✨</div>
-          </div>
-          <div class="card-content">
-            <h3 class="card-title">Table Master</h3>
-            <p class="card-description">Exclusive live table access</p>
-            <div class="card-amount">+180%</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="action-buttons">
-        <button class="btn btn-primary" onclick="claimBonus()">Claim Bonus</button>
-        <button class="btn btn-secondary" onclick="cancelAction()">Cancel</button>
+    <div class="slider-content">
+      <h1 class="slider-title">Claim Your Bonus</h1>
+      <p class="slider-subtitle">Select a bonus offer and start winning today</p>
+      <div class="slider-dots">
+        <div class="dot active"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
       </div>
     </div>
   </div>
 </div>
 
-</x-dc>
-<script data-dc-script data-props='{}'>
+<div class="categories-section">
+  <div class="categories-container">
+    <div class="category-tabs">
+      <button class="category-tab active" onclick="switchCategory(this)">Sport</button>
+      <button class="category-tab" onclick="switchCategory(this)">Casino</button>
+      <button class="category-tab" onclick="switchCategory(this)">Live Casino</button>
+    </div>
+  </div>
+</div>
+
+<div class="content-section">
+  <div class="content-container">
+    <div class="bonus-cards">
+      <div class="bonus-card" data-category="sport">
+        <div class="card-image"><div class="card-image-placeholder">⚽</div></div>
+        <div class="card-content">
+          <h3 class="card-title">Welcome Bonus</h3>
+          <p class="card-description">Match bonus on your first bet</p>
+          <div class="card-amount">+100%</div>
+        </div>
+      </div>
+
+      <div class="bonus-card" data-category="sport">
+        <div class="card-image"><div class="card-image-placeholder">🏅</div></div>
+        <div class="card-content">
+          <h3 class="card-title">Weekly Cashback</h3>
+          <p class="card-description">Get cash back on all sports bets</p>
+          <div class="card-amount">+5%</div>
+        </div>
+      </div>
+
+      <div class="bonus-card" data-category="sport">
+        <div class="card-image"><div class="card-image-placeholder">🎯</div></div>
+        <div class="card-content">
+          <h3 class="card-title">Parlay Boost</h3>
+          <p class="card-description">Enhanced odds on parlay bets</p>
+          <div class="card-amount">+25%</div>
+        </div>
+      </div>
+
+      <div class="bonus-card" data-category="casino" data-hidden="true">
+        <div class="card-image"><div class="card-image-placeholder">🎰</div></div>
+        <div class="card-content">
+          <h3 class="card-title">Casino Welcome</h3>
+          <p class="card-description">Bonus plus free spins</p>
+          <div class="card-amount">+150%</div>
+        </div>
+      </div>
+
+      <div class="bonus-card" data-category="casino" data-hidden="true">
+        <div class="card-image"><div class="card-image-placeholder">💰</div></div>
+        <div class="card-content">
+          <h3 class="card-title">Daily Reload</h3>
+          <p class="card-description">Get bonus every day</p>
+          <div class="card-amount">+50%</div>
+        </div>
+      </div>
+
+      <div class="bonus-card" data-category="casino" data-hidden="true">
+        <div class="card-image"><div class="card-image-placeholder">🎁</div></div>
+        <div class="card-content">
+          <h3 class="card-title">VIP Rewards</h3>
+          <p class="card-description">Exclusive VIP member benefits</p>
+          <div class="card-amount">+200%</div>
+        </div>
+      </div>
+
+      <div class="bonus-card" data-category="livecasino" data-hidden="true">
+        <div class="card-image"><div class="card-image-placeholder">🃏</div></div>
+        <div class="card-content">
+          <h3 class="card-title">Live Welcome</h3>
+          <p class="card-description">Play with live dealers instantly</p>
+          <div class="card-amount">+120%</div>
+        </div>
+      </div>
+
+      <div class="bonus-card" data-category="livecasino" data-hidden="true">
+        <div class="card-image"><div class="card-image-placeholder">👑</div></div>
+        <div class="card-content">
+          <h3 class="card-title">High Roller</h3>
+          <p class="card-description">For big bet players</p>
+          <div class="card-amount">+250%</div>
+        </div>
+      </div>
+
+      <div class="bonus-card" data-category="livecasino" data-hidden="true">
+        <div class="card-image"><div class="card-image-placeholder">✨</div></div>
+        <div class="card-content">
+          <h3 class="card-title">Table Master</h3>
+          <p class="card-description">Exclusive live table access</p>
+          <div class="card-amount">+180%</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="action-buttons">
+      <button class="btn btn-primary" onclick="claimBonus()">Claim Bonus</button>
+      <button class="btn btn-secondary" onclick="cancelAction()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
 let carouselOffset = 0;
 let isPlaying = true;
 let lastUpdateTime = 0;
@@ -327,47 +528,26 @@ function smoothAutoPlay(currentTime) {
     requestAnimationFrame(smoothAutoPlay);
     return;
   }
-
-  if (lastUpdateTime === 0) {
-    lastUpdateTime = currentTime;
-  }
-
+  if (lastUpdateTime === 0) lastUpdateTime = currentTime;
   const elapsed = currentTime - lastUpdateTime;
-
-  // Slide every 2 seconds for smooth continuous movement
   if (elapsed > 2000) {
     slideCarousel(1);
     lastUpdateTime = currentTime;
   }
-
   requestAnimationFrame(smoothAutoPlay);
 }
 
-function pauseCarousel() {
-  isPlaying = false;
-}
-
-function resumeCarousel() {
-  isPlaying = true;
-  lastUpdateTime = 0;
-}
+function pauseCarousel() { isPlaying = false; }
+function resumeCarousel() { isPlaying = true; lastUpdateTime = 0; }
 
 function switchCategory(el) {
   document.querySelectorAll(".category-tab").forEach(tab => tab.classList.remove("active"));
   el.classList.add("active");
-
   const categoryName = el.textContent.toLowerCase();
-  const categoryMap = {
-    'sport': 'sport',
-    'casino': 'casino',
-    'live casino': 'livecasino'
-  };
+  const categoryMap = { 'sport': 'sport', 'casino': 'casino', 'live casino': 'livecasino' };
   const category = categoryMap[categoryName];
-
-  const cards = document.querySelectorAll(".bonus-card");
-  cards.forEach(card => {
-    const cardCategory = card.getAttribute("data-category");
-    if (cardCategory === category) {
+  document.querySelectorAll(".bonus-card").forEach(card => {
+    if (card.getAttribute("data-category") === category) {
       card.removeAttribute("data-hidden");
     } else {
       card.setAttribute("data-hidden", "true");
@@ -375,49 +555,16 @@ function switchCategory(el) {
   });
 }
 
-function claimBonus() {
-  console.log("Bonus claimed");
-}
+function claimBonus() { console.log("Bonus claimed"); }
+function cancelAction() { console.log("Action cancelled"); }
 
-function cancelAction() {
-  console.log("Action cancelled");
-}
+document.querySelectorAll(".carousel-item").forEach(item => {
+  item.addEventListener("mouseenter", pauseCarousel);
+  item.addEventListener("mouseleave", resumeCarousel);
+});
 
-class Component extends DCLogic {
-  </div>
+requestAnimationFrame(smoothAutoPlay);
+</script>
 
-  <script>
-    function initializeValidation() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const username = urlParams.get('username');
-      const userID = urlParams.get('id');
-      const errorContainer = document.getElementById('errorContainer');
-      const mainContent = document.getElementById('mainContent');
-      const errorDetails = document.getElementById('errorDetails');
-
-      // Check if parameters are defined and not empty
-      if (!username || !userID || username.trim() === '' || userID.trim() === '') {
-        // Show error
-        errorContainer.style.display = 'flex';
-        mainContent.style.display = 'none';
-        
-        const errorMsg = `Required parameters missing:<br>
-        <strong>username:</strong> ${username ? '✓' : '❌ undefined'}<br>
-        <strong>id:</strong> ${userID ? '✓' : '❌ undefined'}`;
-        
-        errorDetails.innerHTML = errorMsg;
-        return;
-      }
-
-      // Parameters valid - show main content
-      errorContainer.style.display = 'none';
-      mainContent.style.display = 'block';
-    }
-
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', initializeValidation);
-    } else {
-      initializeValidation();
-    }
-  </script>
 </body>
+</html>
