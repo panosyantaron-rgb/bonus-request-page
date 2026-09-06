@@ -446,7 +446,7 @@ const ADMIN_USER = "admin";
 const ADMIN_PASS = "admin123";
 
 let isLoggedIn = false;
-let claims = [];
+let claims = JSON.parse(localStorage.getItem("bonusClaims") || "[]");
 let bonuses = [
   { title: "Welcome Bonus", amount: "+100%", description: "Match bonus on your first bet", category: "sport" },
   { title: "Weekly Cashback", amount: "+5%", description: "Get cash back on all sports bets", category: "sport" },

@@ -752,11 +752,21 @@ function claimBonus() {
   claimDetails.innerHTML = `<strong>${selectedBonus.title}</strong><br><strong>${selectedBonus.amount}</strong><br><p style="margin-top: 10px; font-size: 12px;">${selectedBonus.description}</p><br>Claimed by: <strong>${currentUser.username}</strong>`;
   successMsg.style.display = "block";
 
-  console.log("✓ Bonus claimed successfully:", {
-    bonus: selectedBonus,
-    user: currentUser,
+  const claimData = {
+    username: currentUser.username,
+    userId: currentUser.id,
+    title: selectedBonus.title,
+    amount: selectedBonus.amount,
+    description: selectedBonus.description,
     timestamp: new Date().toLocaleString()
-  });
+  };
+
+  // Save to localStorage for admin panel
+  let allClaims = JSON.parse(localStorage.getItem("bonusClaims") || "[]");
+  allClaims.push(claimData);
+  localStorage.setItem("bonusClaims", JSON.stringify(allClaims));
+
+  console.log("✓ Bonus claimed successfully:", claimData);
 
   setTimeout(() => {
     successMsg.style.display = "none";
