@@ -386,8 +386,9 @@
     }
 
     .bonus-card.selected {
-      border-color: #00ff00;
-      background: rgba(0, 217, 255, 0.1);
+      border: 2px solid #00ff00 !important;
+      background: rgba(0, 255, 0, 0.15) !important;
+      box-shadow: 0 0 20px rgba(0, 255, 0, 0.4) !important;
     }
 
     .card-image {
@@ -474,34 +475,48 @@
       left: 50%;
       transform: translate(-50%, -50%);
       background: linear-gradient(135deg, #1a1f2e 0%, #252d3d 100%);
-      border: 2px solid #00ff00;
-      border-radius: 12px;
-      padding: 40px;
+      border: 3px solid #00ff00;
+      border-radius: 16px;
+      padding: 50px 40px;
       text-align: center;
       z-index: 10000;
-      max-width: 400px;
-      box-shadow: 0 10px 40px rgba(0, 255, 0, 0.3);
+      max-width: 450px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0, 255, 0, 0.4), 0 0 30px rgba(0, 255, 0, 0.2);
+      animation: slideInUp 0.5s ease;
     }
 
     #successMessage h3 {
       color: #00ff00;
       font-family: 'Poppins', sans-serif;
-      margin-bottom: 10px;
+      font-size: 32px;
+      margin-bottom: 16px;
+      font-weight: 700;
     }
 
     #successMessage p {
       color: #a0aac0;
-      margin-bottom: 20px;
+      margin-bottom: 12px;
+      line-height: 1.6;
     }
 
     #successMessage button {
-      padding: 10px 30px;
-      background: #00ff00;
+      padding: 12px 40px;
+      background: linear-gradient(135deg, #00ff00 0%, #00cc00 100%);
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
       color: #0f1419;
-      font-weight: 600;
+      font-weight: 700;
+      font-size: 14px;
       cursor: pointer;
+      font-family: 'Poppins', sans-serif;
+      transition: all 0.3s ease;
+      margin-top: 20px;
+    }
+
+    #successMessage button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(0, 255, 0, 0.3);
     }
 
     @media (max-width: 768px) {
@@ -527,9 +542,9 @@
 
 <!-- Success Modal -->
 <div id="successMessage">
-  <h3>✓ Bonus Claimed!</h3>
-  <p id="claimDetails"></p>
-  <button onclick="document.getElementById('successMessage').style.display='none'">Close</button>
+  <h3>✅ Bonus Claimed!</h3>
+  <div id="claimDetails"></div>
+  <button type="button" onclick="closeSuccess()">Close</button>
 </div>
 
 <!-- Main Content -->
@@ -652,8 +667,8 @@
       </div>
 
       <div class="action-buttons">
-        <button class="btn btn-primary" onclick="claimBonus()">Claim Bonus</button>
-        <button class="btn btn-secondary" onclick="cancelAction()">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="claimBonus()">Claim Bonus</button>
+        <button type="button" class="btn btn-secondary" onclick="cancelAction()">Cancel</button>
       </div>
     </div>
   </div>
@@ -712,37 +727,54 @@ function switchCategory(el) {
 }
 
 function selectBonus(el) {
-  document.querySelectorAll(".bonus-card").forEach(card => card.classList.remove("selected"));
+  event.stopPropagation();
+  document.querySelectorAll(".bonus-card").forEach(card => {
+    card.classList.remove("selected");
+  });
   el.classList.add("selected");
   selectedBonus = {
-    title: el.querySelector(".card-title").textContent,
-    amount: el.querySelector(".card-amount").textContent
+    title: el.querySelector(".card-title").textContent.trim(),
+    amount: el.querySelector(".card-amount").textContent.trim(),
+    description: el.querySelector(".card-description").textContent.trim()
   };
+  console.log("Bonus selected:", selectedBonus);
 }
 
 function claimBonus() {
   if (!selectedBonus) {
-    alert("Please select a bonus first!");
+    alert("❌ Please select a bonus first!");
     return;
   }
 
   const successMsg = document.getElementById("successMessage");
   const claimDetails = document.getElementById("claimDetails");
 
-  claimDetails.innerHTML = `<strong>${selectedBonus.title}</strong><br>${selectedBonus.amount}<br><br>Claimed by: ${currentUser.username}`;
+  claimDetails.innerHTML = `<strong>${selectedBonus.title}</strong><br><strong>${selectedBonus.amount}</strong><br><p style="margin-top: 10px; font-size: 12px;">${selectedBonus.description}</p><br>Claimed by: <strong>${currentUser.username}</strong>`;
   successMsg.style.display = "block";
 
-  console.log("Bonus claimed:", selectedBonus, "User:", currentUser);
+  console.log("✓ Bonus claimed successfully:", {
+    bonus: selectedBonus,
+    user: currentUser,
+    timestamp: new Date().toLocaleString()
+  });
 
   setTimeout(() => {
     successMsg.style.display = "none";
+    document.querySelectorAll(".bonus-card").forEach(card => card.classList.remove("selected"));
+    selectedBonus = null;
   }, 5000);
 }
 
 function cancelAction() {
   document.querySelectorAll(".bonus-card").forEach(card => card.classList.remove("selected"));
   selectedBonus = null;
-  alert("Action cancelled");
+  console.log("Action cancelled");
+}
+
+function closeSuccess() {
+  document.getElementById("successMessage").style.display = "none";
+  document.querySelectorAll(".bonus-card").forEach(card => card.classList.remove("selected"));
+  selectedBonus = null;
 }
 
 // Validation Logic
