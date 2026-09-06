@@ -35,6 +35,25 @@ function showUserPage() {
     const username = params.get('username') || '';
     const userId = params.get('id') || '';
 
+    // Check if both username and ID are provided
+    if (!username || !userId) {
+        // Hide the form and show error message
+        const formDiv = document.querySelector('.form');
+        if (formDiv) formDiv.style.display = 'none';
+        document.getElementById('bonusOptions').innerHTML = '';
+
+        const message = document.getElementById('successMessage');
+        message.className = 'message error';
+        message.style.display = 'block';
+        message.innerHTML = '⚠️ Access Denied<br><br>Username and ID are required to access this page.<br><br>Please use the correct link with both parameters:<br><code style="background: rgba(0,0,0,0.2); padding: 8px 12px; border-radius: 4px; display: inline-block; margin-top: 10px; font-size: 12px;">?username=your_name&id=your_id</code>';
+        return;
+    }
+
+    // Show form since validation passed
+    const formDiv = document.querySelector('.form');
+    if (formDiv) formDiv.style.display = 'block';
+    document.getElementById('successMessage').style.display = 'none';
+
     document.getElementById('username').value = username;
     document.getElementById('userId').value = userId;
 
