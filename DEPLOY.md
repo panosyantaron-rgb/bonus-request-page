@@ -40,7 +40,27 @@ cPanel → **Git™ Version Control** → **Create**
 Private repo → use `https://<username>:<personal-access-token>@github.com/...` as the clone URL.
 Token: GitHub → Settings → Developer settings → Personal access tokens → Fine-grained → **Contents: Read**.
 
-**Before the first deploy**, edit `.cpanel.yml` in the repo and replace `cpaneluser` with your real cPanel username on both lines, then commit and push.
+Nothing to edit in `.cpanel.yml` — it uses `$HOME`, which cPanel fills in during deploy.
+
+### If cPanel has no Git™ Version Control
+
+Some shared plans ship without Git/SSH. Use the included GitHub Action instead —
+it uploads over FTP on every push, so the site stays connected to GitHub either way.
+
+1. cPanel → **FTP Accounts** → create an account pointed at `public_html`
+2. Click **Configure FTP Client** on that account to read the FTP server hostname
+3. GitHub repo → **Settings → Secrets and variables → Actions → New repository secret**, add three:
+
+   | Secret | Value |
+   |---|---|
+   | `FTP_SERVER` | e.g. `ftp.yourdomain.com` |
+   | `FTP_USERNAME` | e.g. `deploy@yourdomain.com` |
+   | `FTP_PASSWORD` | that account's password |
+
+4. Push. GitHub repo → **Actions** tab shows the deploy running.
+
+The workflow skips `api/config.php`, so your server credentials are never touched.
+Set the secrets yourself in GitHub — don't paste FTP passwords into chat or commit them.
 
 ## 3. Create config.php on the server
 
