@@ -1,11 +1,15 @@
 <?php
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/auth.php';
 
-$pdo = db();
+// db() is called inside each branch, AFTER the auth guard, so an unauthenticated
+// request never opens a database connection.
 $method = $_SERVER['REQUEST_METHOD'];
 
-// ---- List bonuses ----
+// ---- List bonuses (PUBLIC — the main page renders these) ----
 if ($method === 'GET') {
+    $pdo = db();
+
     $rows = $pdo->query(
         "SELECT id, title, amount, description, category FROM bonuses ORDER BY id ASC"
     )->fetchAll();
@@ -14,8 +18,11 @@ if ($method === 'GET') {
     exit;
 }
 
-// ---- Add a bonus ----
+// ---- Add a bonus (ADMIN ONLY) ----
 if ($method === 'POST') {
+    require_admin();
+    $pdo = db();
+
     $d = body();
 
     $title       = trim($d['title'] ?? '');
@@ -35,8 +42,11 @@ if ($method === 'POST') {
     exit;
 }
 
-// ---- Delete a bonus ----
+// ---- Delete a bonus (ADMIN ONLY) ----
 if ($method === 'DELETE') {
+    require_admin();
+    $pdo = db();
+
     $id = (int) ($_GET['id'] ?? 0);
     if ($id <= 0) fail('id is required');
 

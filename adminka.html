@@ -442,25 +442,34 @@
 </div>
 
 <script>
-const ADMIN_USER = "admin";
-const ADMIN_PASS = "admin123";
-
+// The password is NOT in this file. It lives in api/config.php on the server and
+// is checked by api/login.php, which starts a PHP session on success.
 let isLoggedIn = false;
 let claims = [];
 let bonuses = [];
 
 const API = {
   claims: "/api/claims.php",
-  bonuses: "/api/bonuses.php"
+  bonuses: "/api/bonuses.php",
+  login: "/api/login.php"
 };
 
 // Pull claims + bonuses from the server database
 async function loadData() {
   try {
-    const [claimsRes, bonusesRes] = await Promise.all([
-      fetch(API.claims + "?limit=200").then(r => r.json()),
-      fetch(API.bonuses).then(r => r.json())
+    const [claimsHttp, bonusesHttp] = await Promise.all([
+      fetch(API.claims + "?limit=200"),
+      fetch(API.bonuses)
     ]);
+
+    // Session expired or never established — back to the login screen.
+    if (claimsHttp.status === 401) {
+      adminLogout();
+      return;
+    }
+
+    const claimsRes  = await claimsHttp.json();
+    const bonusesRes = await bonusesHttp.json();
 
     if (claimsRes.error) throw new Error(claimsRes.error);
     if (bonusesRes.error) throw new Error(bonusesRes.error);
@@ -491,27 +500,53 @@ function showApiError(msg) {
 
 function adminLogin() {
   const user = document.getElementById("adminUser").value.trim();
-  const pass = document.getElementById("adminPass").value.trim();
+  const pass = document.getElementById("adminPass").value;
   const error = document.getElementById("loginError");
 
-  if (user === ADMIN_USER && pass === ADMIN_PASS) {
-    isLoggedIn = true;
-    document.getElementById("adminUsername").textContent = user;
-    document.getElementById("loginModal").style.display = "none";
-    document.getElementById("adminPanel").classList.add("show");
-    loadData();
-  } else {
-    error.style.display = "block";
-    setTimeout(() => error.style.display = "none", 3000);
-  }
+  fetch(API.login, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username: user, password: pass })
+  })
+    .then(r => r.json().then(res => ({ ok: r.ok, res })))
+    .then(({ ok, res }) => {
+      if (!ok || res.error) throw new Error(res.error || "Login failed");
+      openPanel(user);
+    })
+    .catch(err => {
+      error.textContent = err.message;
+      error.style.display = "block";
+      setTimeout(() => error.style.display = "none", 3000);
+    });
+}
+
+function openPanel(username) {
+  isLoggedIn = true;
+  document.getElementById("adminUsername").textContent = username;
+  document.getElementById("adminPass").value = "";
+  document.getElementById("loginModal").style.display = "none";
+  document.getElementById("adminPanel").classList.add("show");
+  loadData();
 }
 
 function adminLogout() {
-  isLoggedIn = false;
-  document.getElementById("adminUser").value = "";
-  document.getElementById("adminPass").value = "";
-  document.getElementById("loginModal").style.display = "flex";
-  document.getElementById("adminPanel").classList.remove("show");
+  fetch(API.login, { method: "DELETE" }).finally(() => {
+    isLoggedIn = false;
+    claims = [];
+    bonuses = [];
+    document.getElementById("adminUser").value = "";
+    document.getElementById("adminPass").value = "";
+    document.getElementById("loginModal").style.display = "flex";
+    document.getElementById("adminPanel").classList.remove("show");
+  });
+}
+
+// Already logged in from an earlier visit? Skip the login screen.
+function checkSession() {
+  fetch(API.login)
+    .then(r => r.json())
+    .then(res => { if (res.loggedIn) openPanel("admin"); })
+    .catch(() => {});
 }
 
 function addBonus() {
@@ -582,6 +617,7 @@ function loadDashboard() {
 
 // Initialize
 loadDashboard();
+checkSession();
 </script>
 
 </body>

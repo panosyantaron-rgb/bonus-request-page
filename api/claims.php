@@ -1,11 +1,14 @@
 <?php
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/auth.php';
 
-$pdo = db();
+// db() is called inside each branch, AFTER the auth guard, so an unauthenticated
+// request never opens a database connection.
 $method = $_SERVER['REQUEST_METHOD'];
 
-// ---- Save a claim ----
+// ---- Save a claim (PUBLIC — players are not logged in) ----
 if ($method === 'POST') {
+    $pdo = db();
     $d = body();
 
     $username = trim($d['username'] ?? '');
@@ -26,8 +29,11 @@ if ($method === 'POST') {
     exit;
 }
 
-// ---- List claims (newest first) ----
+// ---- List claims, newest first (ADMIN ONLY — this is player data) ----
 if ($method === 'GET') {
+    require_admin();
+    $pdo = db();
+
     $limit = isset($_GET['limit']) ? max(1, min(500, (int) $_GET['limit'])) : 100;
 
     $rows = $pdo->query(
@@ -42,8 +48,11 @@ if ($method === 'GET') {
     exit;
 }
 
-// ---- Delete one claim ----
+// ---- Delete one claim (ADMIN ONLY) ----
 if ($method === 'DELETE') {
+    require_admin();
+    $pdo = db();
+
     $id = (int) ($_GET['id'] ?? 0);
     if ($id <= 0) fail('id is required');
 
