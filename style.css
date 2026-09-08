@@ -76,14 +76,14 @@ body {
 
 .container {
     width: 100%;
-    max-width: 500px;
+    max-width: 600px;
 }
 
 .card {
     background: var(--color-surface);
     border-radius: var(--radius-xl);
     border: 1px solid var(--color-border);
-    padding: var(--spacing-xl);
+    overflow: hidden;
     box-shadow: var(--shadow-lg);
     transition: box-shadow 0.3s ease, transform 0.3s ease;
 }
@@ -629,6 +629,176 @@ label {
     color: var(--color-text-secondary);
     font-size: 1rem;
     font-weight: 500;
+}
+
+/* Slider Styles */
+.slider {
+    background: linear-gradient(135deg, var(--color-accent), var(--color-accent-dark));
+    color: white;
+    padding: var(--spacing-2xl) var(--spacing-xl);
+    text-align: center;
+    min-height: 250px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: var(--spacing-lg);
+    position: relative;
+    overflow: hidden;
+}
+
+.slider::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at 30% 50%, rgba(255,255,255,0.1), transparent),
+                radial-gradient(circle at 70% 50%, rgba(0,0,0,0.1), transparent);
+    pointer-events: none;
+}
+
+.slider-content {
+    position: relative;
+    z-index: 1;
+}
+
+.slider h1 {
+    font-size: 1.875rem;
+    font-weight: 800;
+    margin: 0;
+    line-height: 1.2;
+    letter-spacing: -0.03em;
+}
+
+.slider p {
+    font-size: 1rem;
+    opacity: 0.95;
+    margin: 0;
+    font-weight: 500;
+}
+
+.slide-dots {
+    display: flex;
+    gap: var(--spacing-sm);
+    justify-content: center;
+    position: relative;
+    z-index: 1;
+}
+
+.dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.dot.active {
+    background: white;
+    transform: scale(1.2);
+}
+
+/* Content Section */
+.content {
+    padding: var(--spacing-xl);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xl);
+}
+
+/* Category Tabs */
+.category-tabs {
+    display: flex;
+    gap: var(--spacing-md);
+    border-bottom: 2px solid var(--color-border);
+    overflow-x: auto;
+    padding-bottom: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    scroll-behavior: smooth;
+}
+
+.category-tab {
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    border-bottom: 3px solid transparent;
+    margin-bottom: -1.5rem;
+    white-space: nowrap;
+    transition: all 0.3s ease;
+}
+
+.category-tab:hover {
+    color: var(--color-accent);
+}
+
+.category-tab.active {
+    color: var(--color-accent);
+    border-bottom-color: var(--color-accent);
+}
+
+/* Bonus Cards */
+.bonus-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: var(--spacing-md);
+    margin: var(--spacing-lg) 0;
+}
+
+.bonus-card-item {
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-lg);
+    background: linear-gradient(135deg, var(--color-accent), var(--color-accent-dark));
+    color: white;
+    text-align: center;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    box-shadow: var(--shadow-md);
+}
+
+.bonus-card-item:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.bonus-card-item.selected {
+    border-color: white;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+}
+
+.bonus-card-name {
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+.bonus-card-desc {
+    font-size: 0.85rem;
+    opacity: 0.9;
+    font-weight: 500;
+}
+
+.bonus-card-amount {
+    font-size: 1.1rem;
+    font-weight: 700;
+    opacity: 0.95;
+}
+
+/* Buttons */
+.buttons {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-lg);
 }
 
 @media (max-width: 640px) {

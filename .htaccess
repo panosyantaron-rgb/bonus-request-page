@@ -1,0 +1,15 @@
+# Force HTTPS
+RewriteEngine On
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Clean URL: /adminka -> /adminka.html
+RewriteRule ^adminka/?$ adminka.html [L]
+
+# Block direct access to config files
+<FilesMatch "^config.*\.php$">
+    Require all denied
+</FilesMatch>
+
+# Don't list directory contents
+Options -Indexes

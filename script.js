@@ -31,34 +31,9 @@ function showUserPage() {
     document.getElementById('loginPage').style.display = 'none';
     document.getElementById('adminPage').style.display = 'none';
 
-    const params = new URLSearchParams(window.location.search);
-    const username = params.get('username') || '';
-    const userId = params.get('id') || '';
-
-    // Check if both username and ID are provided
-    if (!username || !userId) {
-        // Hide the form and show error message
-        const formDiv = document.querySelector('.form');
-        if (formDiv) formDiv.style.display = 'none';
-        document.getElementById('bonusOptions').innerHTML = '';
-
-        const message = document.getElementById('successMessage');
-        message.className = 'message error';
-        message.style.display = 'block';
-        message.innerHTML = '⚠️ Access Denied<br><br>Username and ID are required to access this page.<br><br>Please use the correct link with both parameters:<br><code style="background: rgba(0,0,0,0.2); padding: 8px 12px; border-radius: 4px; display: inline-block; margin-top: 10px; font-size: 12px;">?username=your_name&id=your_id</code>';
-        return;
-    }
-
-    // Show form since validation passed
-    const formDiv = document.querySelector('.form');
-    if (formDiv) formDiv.style.display = 'block';
-    document.getElementById('successMessage').style.display = 'none';
-
-    document.getElementById('username').value = username;
-    document.getElementById('userId').value = userId;
-
     loadBonuses();
-    renderBonusOptions();
+    renderBonusCards();
+    setupCategoryTabs();
 }
 
 function showLoginPage() {
@@ -171,6 +146,46 @@ function renderBonusOptions() {
     `).join('');
 }
 
+function renderBonusCards() {
+    const bonuses = getBonuses();
+    const container = document.getElementById('bonusContainer');
+
+    if (bonuses.length === 0) {
+        container.innerHTML = '<p style="color: #64748b; font-size: 0.875rem; grid-column: 1 / -1;">No bonuses available.</p>';
+        return;
+    }
+
+    container.innerHTML = bonuses.map(bonus => `
+        <div class="bonus-card-item" id="bonus-card-${bonus.id}" onclick="selectBonusCard(${bonus.id})">
+            <div class="bonus-card-name">${bonus.name}</div>
+            <div class="bonus-card-desc">${bonus.description}</div>
+            <div class="bonus-card-amount">+Bonus</div>
+        </div>
+    `).join('');
+}
+
+function selectBonusCard(bonusId) {
+    document.querySelectorAll('.bonus-card-item').forEach(card => {
+        card.classList.remove('selected');
+    });
+    document.getElementById(`bonus-card-${bonusId}`).classList.add('selected');
+    document.getElementById('currentSelectedBonus').value = bonusId;
+}
+
+function switchCategory(tabElement) {
+    document.querySelectorAll('.category-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    tabElement.classList.add('active');
+}
+
+function setupCategoryTabs() {
+    const tabs = document.querySelectorAll('.category-tab');
+    if (tabs.length > 0) {
+        tabs[0].classList.add('active');
+    }
+}
+
 function selectBonus(bonusId) {
     document.querySelectorAll('.bonus-card').forEach(card => {
         card.classList.remove('selected');
@@ -179,23 +194,25 @@ function selectBonus(bonusId) {
 }
 
 function submitRequest() {
-    const username = document.getElementById('username').value;
-    const userId = document.getElementById('userId').value;
-    const selectedBonus = document.querySelector('input[name="bonus"]:checked');
+    const selectedCardId = document.getElementById('currentSelectedBonus').value;
 
-    if (!selectedBonus) {
+    if (!selectedCardId) {
         showMessage('Please select a bonus', 'error');
         return;
     }
 
     const bonuses = getBonuses();
-    const bonusData = bonuses.find(b => b.id === parseInt(selectedBonus.value));
+    const bonusData = bonuses.find(b => b.id === parseInt(selectedCardId));
+
+    if (!bonusData) {
+        showMessage('Selected bonus not found', 'error');
+        return;
+    }
 
     const request = {
-        username: username,
-        id: userId,
         bonus: bonusData.name,
         bonusId: bonusData.id,
+        description: bonusData.description,
         timestamp: new Date().toISOString()
     };
 
@@ -216,9 +233,14 @@ function submitRequest() {
 }
 
 function resetForm() {
-    document.querySelectorAll('input[name="bonus"]').forEach(radio => radio.checked = false);
-    document.querySelectorAll('.bonus-card').forEach(card => card.classList.remove('selected'));
-    document.getElementById('successMessage').innerHTML = '';
+    document.querySelectorAll('.bonus-card-item').forEach(card => card.classList.remove('selected'));
+    if (document.getElementById('currentSelectedBonus')) {
+        document.getElementById('currentSelectedBonus').value = '';
+    }
+    const messageDiv = document.getElementById('successMessage');
+    if (messageDiv) {
+        messageDiv.innerHTML = '';
+    }
 }
 
 function showMessage(text, type) {
@@ -304,18 +326,16 @@ function renderRequestsList() {
         <table class="requests-table">
             <thead>
                 <tr>
-                    <th>Username</th>
-                    <th>ID</th>
                     <th>Bonus</th>
+                    <th>Description</th>
                     <th>Date</th>
                 </tr>
             </thead>
             <tbody>
                 ${requests.map(req => `
                     <tr>
-                        <td>${req.username || '-'}</td>
-                        <td>${req.id || '-'}</td>
                         <td>${req.bonus}</td>
+                        <td>${req.description || '-'}</td>
                         <td>${new Date(req.timestamp).toLocaleString()}</td>
                     </tr>
                 `).join('')}
@@ -332,9 +352,9 @@ function exportCSV() {
         return;
     }
 
-    let csv = 'Username,ID,Bonus,Timestamp\n';
+    let csv = 'Bonus,Description,Timestamp\n';
     requests.forEach(req => {
-        csv += `"${req.username || ''}","${req.id || ''}","${req.bonus}","${req.timestamp}"\n`;
+        csv += `"${req.bonus}","${req.description || ''}","${req.timestamp}"\n`;
     });
 
     downloadFile(csv, 'bonus-requests.csv', 'text/csv');

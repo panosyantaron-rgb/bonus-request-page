@@ -1,0 +1,21 @@
+---
+deployment:
+  tasks:
+    # Change 'cpaneluser' below to your real cPanel username (both lines).
+    # Find it in cPanel > top-right account menu, or the path shown in File Manager.
+    - export DEPLOYPATH=/home/cpaneluser/public_html
+    - /bin/mkdir -p $DEPLOYPATH/api
+
+    # Frontend
+    - /bin/cp index.html      $DEPLOYPATH/
+    - /bin/cp adminka.html    $DEPLOYPATH/
+    - /bin/cp style.css       $DEPLOYPATH/
+    - /bin/cp script.js       $DEPLOYPATH/
+    - /bin/cp bg.png          $DEPLOYPATH/
+    - /bin/cp .htaccess       $DEPLOYPATH/
+
+    # Backend API (config.php is NOT copied — it stays on the server with your real credentials)
+    - /bin/cp api/db.php              $DEPLOYPATH/api/
+    - /bin/cp api/claims.php          $DEPLOYPATH/api/
+    - /bin/cp api/bonuses.php         $DEPLOYPATH/api/
+    - /bin/cp api/config.example.php  $DEPLOYPATH/api/

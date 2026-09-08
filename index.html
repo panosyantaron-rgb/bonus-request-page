@@ -761,10 +761,24 @@ function claimBonus() {
     timestamp: new Date().toLocaleString()
   };
 
-  // Save to localStorage for admin panel
-  let allClaims = JSON.parse(localStorage.getItem("bonusClaims") || "[]");
-  allClaims.push(claimData);
-  localStorage.setItem("bonusClaims", JSON.stringify(allClaims));
+  // Save to server database (permanent history for the admin panel)
+  fetch("/api/claims.php", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(claimData)
+  })
+    .then(r => r.json())
+    .then(res => {
+      if (res.error) throw new Error(res.error);
+      console.log("✓ Claim saved to server, id:", res.id);
+    })
+    .catch(err => {
+      // Server unreachable — keep the claim locally so it isn't lost
+      console.error("Could not save claim to server:", err);
+      const pending = JSON.parse(localStorage.getItem("bonusClaims") || "[]");
+      pending.push(claimData);
+      localStorage.setItem("bonusClaims", JSON.stringify(pending));
+    });
 
   console.log("✓ Bonus claimed successfully:", claimData);
 
@@ -788,6 +802,36 @@ function closeSuccess() {
 }
 
 // Validation Logic
+// Load the bonus list from the server so admin-panel changes show up here.
+// If the server is unreachable, the cards already in the HTML stay as they are.
+function loadBonusesFromServer() {
+  const ICONS = { sport: "⚽", casino: "🎰", livecasino: "🃏" };
+
+  fetch("/api/bonuses.php")
+    .then(r => r.json())
+    .then(res => {
+      if (res.error || !Array.isArray(res.bonuses) || res.bonuses.length === 0) return;
+
+      const grid = document.querySelector(".bonus-cards");
+      const activeTab = document.querySelector(".category-tab.active");
+      const activeCategory = activeTab
+        ? ({ "sport": "sport", "casino": "casino", "live casino": "livecasino" })[activeTab.textContent.trim().toLowerCase()]
+        : "sport";
+
+      grid.innerHTML = res.bonuses.map(b => `
+        <div class="bonus-card" data-category="${b.category}" onclick="selectBonus(this)"${b.category === activeCategory ? "" : ' data-hidden="true"'}>
+          <div class="card-image"><div class="card-image-placeholder">${ICONS[b.category] || "🎁"}</div></div>
+          <div class="card-content">
+            <h3 class="card-title">${b.title}</h3>
+            <p class="card-description">${b.description}</p>
+            <div class="card-amount">${b.amount}</div>
+          </div>
+        </div>
+      `).join("");
+    })
+    .catch(err => console.error("Could not load bonuses from server:", err));
+}
+
 function validateAccess() {
   const urlParams = new URLSearchParams(window.location.search);
   const username = urlParams.get('username');
@@ -801,6 +845,7 @@ function validateAccess() {
     currentUser = { username, id: userID };
     errorModal.style.display = "none";
     mainContent.classList.add("show");
+    loadBonusesFromServer();
     return;
   }
 

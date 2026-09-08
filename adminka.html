@@ -446,18 +446,48 @@ const ADMIN_USER = "admin";
 const ADMIN_PASS = "admin123";
 
 let isLoggedIn = false;
-let claims = JSON.parse(localStorage.getItem("bonusClaims") || "[]");
-let bonuses = [
-  { title: "Welcome Bonus", amount: "+100%", description: "Match bonus on your first bet", category: "sport" },
-  { title: "Weekly Cashback", amount: "+5%", description: "Get cash back on all sports bets", category: "sport" },
-  { title: "Parlay Boost", amount: "+25%", description: "Enhanced odds on parlay bets", category: "sport" },
-  { title: "Casino Welcome", amount: "+150%", description: "Bonus plus free spins", category: "casino" },
-  { title: "Daily Reload", amount: "+50%", description: "Get bonus every day", category: "casino" },
-  { title: "VIP Rewards", amount: "+200%", description: "Exclusive VIP member benefits", category: "casino" },
-  { title: "Live Welcome", amount: "+120%", description: "Play with live dealers instantly", category: "livecasino" },
-  { title: "High Roller", amount: "+250%", description: "For big bet players", category: "livecasino" },
-  { title: "Table Master", amount: "+180%", description: "Exclusive live table access", category: "livecasino" }
-];
+let claims = [];
+let bonuses = [];
+
+const API = {
+  claims: "/api/claims.php",
+  bonuses: "/api/bonuses.php"
+};
+
+// Pull claims + bonuses from the server database
+async function loadData() {
+  try {
+    const [claimsRes, bonusesRes] = await Promise.all([
+      fetch(API.claims + "?limit=200").then(r => r.json()),
+      fetch(API.bonuses).then(r => r.json())
+    ]);
+
+    if (claimsRes.error) throw new Error(claimsRes.error);
+    if (bonusesRes.error) throw new Error(bonusesRes.error);
+
+    claims = claimsRes.claims || [];
+    bonuses = bonusesRes.bonuses || [];
+    showApiError("");
+  } catch (err) {
+    console.error("Could not load data from server:", err);
+    showApiError("Cannot reach the database. Check api/config.php credentials on the server.");
+  }
+  loadDashboard();
+}
+
+function showApiError(msg) {
+  let bar = document.getElementById("apiError");
+  if (!bar) {
+    bar = document.createElement("div");
+    bar.id = "apiError";
+    bar.style.cssText = "display:none;background:#3a1f26;border:1px solid #ff6b6b;color:#ff9b9b;" +
+      "padding:12px 16px;border-radius:8px;margin-bottom:20px;font-size:13px;";
+    const panel = document.getElementById("adminPanel");
+    if (panel) panel.insertBefore(bar, panel.firstChild);
+  }
+  bar.textContent = msg;
+  bar.style.display = msg ? "block" : "none";
+}
 
 function adminLogin() {
   const user = document.getElementById("adminUser").value.trim();
@@ -469,7 +499,7 @@ function adminLogin() {
     document.getElementById("adminUsername").textContent = user;
     document.getElementById("loginModal").style.display = "none";
     document.getElementById("adminPanel").classList.add("show");
-    loadDashboard();
+    loadData();
   } else {
     error.style.display = "block";
     setTimeout(() => error.style.display = "none", 3000);
@@ -495,23 +525,21 @@ function addBonus() {
     return;
   }
 
-  bonuses.push({ title, amount, description, category });
-  document.getElementById("bonusTitle").value = "";
-  document.getElementById("bonusAmount").value = "";
-  document.getElementById("bonusDescription").value = "";
-
-  loadDashboard();
-  alert("✓ Bonus added successfully!");
-}
-
-function addClaim(username, bonus) {
-  claims.push({
-    username,
-    bonus: bonus.title,
-    amount: bonus.amount,
-    timestamp: new Date().toLocaleString()
-  });
-  loadDashboard();
+  fetch(API.bonuses, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ title, amount, description, category })
+  })
+    .then(r => r.json())
+    .then(res => {
+      if (res.error) throw new Error(res.error);
+      document.getElementById("bonusTitle").value = "";
+      document.getElementById("bonusAmount").value = "";
+      document.getElementById("bonusDescription").value = "";
+      loadData();
+      alert("✓ Bonus added successfully!");
+    })
+    .catch(err => alert("❌ Could not save bonus: " + err.message));
 }
 
 function loadDashboard() {
@@ -523,11 +551,11 @@ function loadDashboard() {
   if (claims.length === 0) {
     claimsList.innerHTML = '<p style="color: var(--color-text-secondary); font-size: 12px;">No claims yet</p>';
   } else {
-    claimsList.innerHTML = claims.slice(-10).reverse().map(claim => `
+    claimsList.innerHTML = claims.map(claim => `
       <div class="claim-item">
-        <div class="claim-user">${claim.username}</div>
-        <div class="claim-bonus">${claim.bonus} ${claim.amount}</div>
-        <div class="claim-time">${claim.timestamp}</div>
+        <div class="claim-user">${claim.username} <span style="color: var(--color-text-secondary); font-weight: 400;">(ID: ${claim.user_id})</span></div>
+        <div class="claim-bonus">${claim.bonus_title} ${claim.bonus_amount}</div>
+        <div class="claim-time">${claim.created_at}</div>
       </div>
     `).join("");
   }
@@ -545,6 +573,7 @@ function loadDashboard() {
   const casinoCount = bonuses.filter(b => b.category === "casino").length;
   const livecasinoCount = bonuses.filter(b => b.category === "livecasino").length;
 
+  document.getElementById("totalBonuses").textContent = bonuses.length;
   document.getElementById("sportCount").textContent = sportCount;
   document.getElementById("casinoCount").textContent = casinoCount;
   document.getElementById("livecasinoCount").textContent = livecasinoCount;
