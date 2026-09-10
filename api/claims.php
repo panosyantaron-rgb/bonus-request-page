@@ -52,12 +52,26 @@ if ($method === 'GET') {
         $params[] = $status;
     }
 
+    // awaiting_reply: the newest message on the claim came from the player, so
+    // someone asked something and nobody has answered yet.
     $stmt = $pdo->prepare(
-        "SELECT id, username, user_id, bonus_title, bonus_amount, bonus_description, status, created_at
-         FROM claims$where ORDER BY id DESC LIMIT $limit"   // $limit clamped to an int above
+        "SELECT c.id, c.username, c.user_id, c.bonus_title, c.bonus_amount,
+                c.bonus_description, c.status, c.created_at,
+                (SELECT COUNT(*) FROM claim_messages m WHERE m.claim_id = c.id) AS message_count,
+                (SELECT m.author FROM claim_messages m WHERE m.claim_id = c.id
+                 ORDER BY m.id DESC LIMIT 1) AS last_author
+         FROM claims c" . ($where ? str_replace(' WHERE status', ' WHERE c.status', $where) : '') . "
+         ORDER BY c.id DESC LIMIT $limit"   // $limit clamped to an int above
     );
     $stmt->execute($params);
     $rows = $stmt->fetchAll();
+
+    foreach ($rows as &$r) {
+        $r['message_count']  = (int) $r['message_count'];
+        $r['awaiting_reply'] = ($r['last_author'] === 'user');
+        unset($r['last_author']);
+    }
+    unset($r);
 
     $total = (int) $pdo->query("SELECT COUNT(*) FROM claims")->fetchColumn();
     $users = (int) $pdo->query("SELECT COUNT(DISTINCT username) FROM claims")->fetchColumn();

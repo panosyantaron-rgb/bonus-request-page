@@ -184,6 +184,29 @@
 
     .timeline { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); display: none; }
     .timeline.open { display: block; }
+
+    .notes { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); display: none; }
+    .notes.open { display: block; }
+    .note-msg { margin-bottom: 10px; }
+    .note-who { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 4px; }
+    .note-body {
+      background: var(--surface-alt); border-radius: 8px; padding: 10px 12px;
+      font-size: 13px; line-height: 1.5; white-space: pre-wrap; word-break: break-word;
+    }
+    .note-msg.user .note-body { background: rgba(255,176,32,0.1); border: 1px solid rgba(255,176,32,0.28); }
+    .note-time { font-size: 11px; color: var(--muted); margin-top: 3px; }
+    .note-form { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+    .note-form textarea {
+      width: 100%; min-height: 68px; padding: 10px;
+      background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text); font-family: 'Inter', sans-serif; font-size: 15px; resize: vertical;
+    }
+    .note-form button { min-height: 42px; }
+    .waiting {
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+      background: rgba(255,176,32,0.16); color: var(--warn);
+      padding: 2px 8px; border-radius: 20px; margin-left: 6px;
+    }
     .timeline .row { font-size: 12px; color: var(--muted); padding: 3px 0; font-variant-numeric: tabular-nums; }
     .timeline .row b { color: var(--text); font-weight: 500; }
 
@@ -503,6 +526,7 @@ const API = {
   slider:   "/api/slider.php",
   logs:     "/api/logs.php",
   upload:   "/api/upload.php",
+  messages: "/api/messages.php",
   login:    "/api/login.php"
 };
 
@@ -676,6 +700,7 @@ function renderClaims() {
           <span class="claim-user">${esc(c.username)}</span>
           <span class="claim-id">ID ${esc(c.user_id)}</span>
           <span class="pill ${st}">${LABELS[st]}</span>
+          ${c.awaiting_reply ? '<span class="waiting">Question waiting</span>' : ""}
         </div>
         <div class="claim-bonus">${esc(c.bonus_title)} ${esc(c.bonus_amount)}</div>
         <div class="claim-time">${esc(c.created_at)}</div>
@@ -684,8 +709,10 @@ function renderClaims() {
             ? `<button class="current" disabled>${LABELS[s]}</button>`
             : `<button onclick="setStatus(${Number(c.id)},'${s}')">${LABELS[s]}</button>`).join("")}
           <button class="link" onclick="toggleTimeline(${Number(c.id)})">History</button>
+          <button class="link" onclick="toggleNotes(${Number(c.id)})">💬 Notes${c.message_count ? " (" + Number(c.message_count) + ")" : ""}</button>
         </div>
         <div class="timeline" id="tl-${Number(c.id)}"></div>
+        <div class="notes" id="nt-${Number(c.id)}"></div>
       </div>`;
   }).join("");
 }
@@ -725,6 +752,71 @@ function toggleTimeline(id) {
         : '<div class="row">No history recorded.</div>';
     })
     .catch(() => { el.innerHTML = '<div class="row">Could not load history.</div>'; });
+}
+
+/* ---------- Notes on a claim ---------- */
+function toggleNotes(claimId) {
+  const el = document.getElementById("nt-" + claimId);
+  if (el.classList.contains("open")) { el.classList.remove("open"); return; }
+
+  el.classList.add("open");
+  el.innerHTML = '<p class="empty">Loading…</p>';
+
+  fetch(API.messages + "?claim=" + claimId)
+    .then(r => r.json())
+    .then(res => {
+      if (res.error) throw new Error(res.error);
+      renderNotes(claimId, res.messages || []);
+    })
+    .catch(e => {
+      el.innerHTML = '<p class="empty">Could not load notes.</p>';
+      console.error(e);
+    });
+}
+
+function renderNotes(claimId, messages) {
+  const el = document.getElementById("nt-" + claimId);
+
+  const thread = messages.length
+    ? messages.map(m => `
+        <div class="note-msg ${m.author === "admin" ? "admin" : "user"}">
+          <div class="note-who">${m.author === "admin" ? "You" : "Player"}</div>
+          <div class="note-body">${esc(m.body)}</div>
+          <div class="note-time">${esc(m.created_at)}</div>
+        </div>`).join("")
+    : '<p class="empty">No notes yet. Anything you write here is visible to the player.</p>';
+
+  el.innerHTML = thread + `
+    <div class="note-form">
+      <textarea id="note-${claimId}" maxlength="1000" placeholder="Write a note the player will see…"></textarea>
+      <button type="button" class="btn" id="notebtn-${claimId}" onclick="sendNote(${claimId})">Post note</button>
+    </div>`;
+}
+
+function sendNote(claimId) {
+  const box = document.getElementById("note-" + claimId);
+  const btn = document.getElementById("notebtn-" + claimId);
+  const text = box.value.trim();
+  if (!text) { box.focus(); return; }
+
+  btn.disabled = true;
+  btn.textContent = "Posting…";
+
+  fetch(API.messages, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ claim: claimId, body: text })
+  })
+    .then(r => r.json())
+    .then(res => {
+      if (res.error) throw new Error(res.error);
+      box.value = "";
+      document.getElementById("nt-" + claimId).classList.remove("open");
+      toggleNotes(claimId);
+      loadAll();
+    })
+    .catch(e => alert("Could not post the note: " + e.message))
+    .finally(() => { btn.disabled = false; btn.textContent = "Post note"; });
 }
 
 function renderBonuses() {

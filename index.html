@@ -2,6 +2,9 @@
 <html>
 <head>
   <meta charset="utf-8">
+  <!-- Without this a phone renders the page at desktop width and scales it
+       down, so none of the breakpoints below ever really apply. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Bonus Request Page</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap">
   <style>
@@ -537,13 +540,161 @@
       box-shadow: 0 5px 20px rgba(0, 255, 0, 0.3);
     }
 
-    @media (max-width: 768px) {
-      .slider-section { height: 400px; }
-      .carousel-item { width: 160px; height: 200px; }
-      .slider-title { font-size: 24px; }
-      .bonus-cards { grid-template-columns: 1fr; gap: 20px; }
-      .category-tabs { gap: 10px; }
-      .category-tab { padding: 10px 20px; font-size: 12px; }
+    /* ---------- Bonuses / My Requests switcher ---------- */
+    .view-tabs {
+      display: flex; gap: 10px; justify-content: center;
+      padding: 0 20px 6px; flex-wrap: wrap;
+    }
+    .view-tab {
+      background: transparent; border: none; border-bottom: 2px solid transparent;
+      color: var(--color-text-secondary); font-family: 'Poppins', sans-serif;
+      font-size: 15px; font-weight: 600; padding: 12px 18px; min-height: 46px;
+      cursor: pointer; transition: color 0.2s ease, border-color 0.2s ease;
+    }
+    .view-tab:hover { color: var(--color-text); }
+    .view-tab.active { color: var(--color-accent); border-bottom-color: var(--color-accent); }
+    .view-badge {
+      display: inline-block; background: var(--color-accent); color: #0f1419;
+      font-size: 11px; font-weight: 700; border-radius: 20px;
+      padding: 1px 7px; margin-left: 4px; vertical-align: middle;
+    }
+
+    /* ---------- My Requests ---------- */
+    .requests-wrap { max-width: 720px; margin: 0 auto; padding: 20px 20px 60px; }
+    .requests-empty { color: var(--color-text-secondary); text-align: center; padding: 40px 0; font-size: 14px; }
+
+    .request {
+      background: var(--color-surface); border: 1px solid var(--color-border);
+      border-left: 3px solid var(--color-border);
+      border-radius: 12px; padding: 18px; margin-bottom: 14px;
+    }
+    .request.s-new { border-left-color: var(--color-accent); }
+    .request.s-approved { border-left-color: #ffb020; }
+    .request.s-paid { border-left-color: #35d07f; }
+    .request.s-rejected { border-left-color: #ff6b6b; }
+
+    .request-head { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+    .request-title { font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 16px; }
+    .request-amount { color: var(--color-accent); font-weight: 700; }
+    .request-status {
+      margin-left: auto; font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.05em; padding: 4px 10px; border-radius: 20px;
+    }
+    .request-status.new { background: rgba(0,217,255,0.15); color: var(--color-accent); }
+    .request-status.approved { background: rgba(255,176,32,0.15); color: #ffb020; }
+    .request-status.paid { background: rgba(53,208,127,0.15); color: #35d07f; }
+    .request-status.rejected { background: rgba(255,107,107,0.15); color: #ff6b6b; }
+    .request-date { font-size: 12px; color: var(--color-text-secondary); margin-top: 6px; }
+
+    .request-toggle {
+      background: transparent; border: 1px solid var(--color-border); border-radius: 8px;
+      color: var(--color-text-secondary); font-family: 'Poppins', sans-serif;
+      font-size: 13px; font-weight: 600; padding: 10px 14px; min-height: 42px;
+      cursor: pointer; margin-top: 12px; width: 100%;
+    }
+    .request-toggle:hover { border-color: var(--color-accent); color: var(--color-accent); }
+    .request-toggle .unread {
+      background: var(--color-accent); color: #0f1419; border-radius: 20px;
+      font-size: 11px; padding: 1px 7px; margin-left: 6px;
+    }
+
+    .thread { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--color-border); }
+    .msg { margin-bottom: 12px; }
+    .msg-who { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-text-secondary); margin-bottom: 4px; }
+    .msg-body {
+      background: var(--color-surface-alt); border-radius: 10px; padding: 11px 13px;
+      font-size: 14px; line-height: 1.5; white-space: pre-wrap; word-break: break-word;
+    }
+    .msg.admin .msg-body { background: rgba(0,217,255,0.09); border: 1px solid rgba(0,217,255,0.25); }
+    .msg-time { font-size: 11px; color: var(--color-text-secondary); margin-top: 4px; }
+
+    .ask { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+    .ask textarea {
+      width: 100%; min-height: 78px; padding: 12px;
+      background: var(--color-bg); border: 1px solid var(--color-border);
+      border-radius: 10px; color: var(--color-text);
+      font-family: 'Inter', sans-serif; font-size: 16px; resize: vertical;
+    }
+    .ask button {
+      min-height: 46px; padding: 12px; border: none; border-radius: 10px;
+      background: var(--color-accent); color: #0f1419;
+      font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 14px; cursor: pointer;
+    }
+    .ask button:disabled { opacity: 0.5; cursor: default; }
+
+    /* ---------- Tablet ---------- */
+    @media (max-width: 900px) {
+      .slider-section { height: 440px; }
+      .carousel-item { width: 170px; height: 210px; }
+      .slider-title { font-size: 30px; }
+      .bonus-cards { grid-template-columns: repeat(2, 1fr); gap: 18px; }
+    }
+
+    /* ---------- Phone ---------- */
+    @media (max-width: 600px) {
+      body { overflow-x: hidden; }
+
+      .slider-section { height: 340px; padding: 0 12px; }
+      .slider-title-top { font-size: 20px; }
+      .slider-title { font-size: 24px; line-height: 1.2; }
+      .slider-subtitle { font-size: 13px; }
+
+      /* The 3D carousel is wide by nature — shrink the cards and pull the
+         side ones in so nothing sits off-screen. */
+      .carousel-item { width: 120px; height: 150px; }
+      .carousel-container { transform: scale(0.85); }
+
+      .categories-section { padding: 0 12px; }
+      .category-tabs {
+        gap: 8px;
+        overflow-x: auto;
+        justify-content: flex-start;
+        padding-bottom: 4px;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+      }
+      .category-tabs::-webkit-scrollbar { display: none; }
+      .category-tab {
+        padding: 11px 18px; font-size: 13px;
+        white-space: nowrap; flex-shrink: 0; min-height: 44px;
+      }
+
+      .content-section { padding: 0 12px 40px; }
+      .bonus-cards { grid-template-columns: 1fr; gap: 14px; }
+      .card-image { height: 120px; }
+      .card-image-placeholder { font-size: 46px; }
+      .card-logo { max-height: 70px; }
+      .card-content { padding: 16px; }
+      .card-title { font-size: 17px; }
+      .card-amount { font-size: 22px; }
+
+      /* Full-width, thumb-sized buttons rather than two narrow ones */
+      .action-buttons { flex-direction: column; gap: 10px; }
+      .btn { width: 100%; padding: 15px 20px; font-size: 15px; min-height: 50px; }
+
+      .error-box { padding: 26px 20px; }
+      .error-box h1 { font-size: 24px; }
+
+      .view-tabs { gap: 4px; padding: 0 12px 4px; }
+      .view-tab { font-size: 14px; padding: 12px 14px; }
+      .requests-wrap { padding: 14px 12px 50px; }
+      .request { padding: 15px; }
+      .request-status { margin-left: 0; }
+    }
+
+    @media (max-width: 380px) {
+      .carousel-item { width: 104px; height: 132px; }
+      .carousel-container { transform: scale(0.78); }
+      .slider-title { font-size: 21px; }
+    }
+
+    /* Someone on a phone in landscape has very little height to spare */
+    @media (max-height: 480px) and (orientation: landscape) {
+      .slider-section { height: 300px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
     }
   </style>
 </head>
@@ -589,6 +740,15 @@
     </div>
   </div>
 
+  <!-- Bonuses vs. the player's own requests -->
+  <div class="view-tabs">
+    <button class="view-tab active" data-view="bonuses" onclick="switchView('bonuses')">Bonuses</button>
+    <button class="view-tab" data-view="requests" onclick="switchView('requests')">
+      My Requests <span class="view-badge" id="requestsBadge" hidden>0</span>
+    </button>
+  </div>
+
+  <div id="view-bonuses">
   <div class="categories-section">
     <div class="categories-container">
       <div class="category-tabs">
@@ -687,6 +847,16 @@
       <div class="action-buttons">
         <button type="button" class="btn btn-primary" onclick="claimBonus()">Claim Bonus</button>
         <button type="button" class="btn btn-secondary" onclick="cancelAction()">Cancel</button>
+      </div>
+    </div>
+  </div>
+  </div><!-- /view-bonuses -->
+
+  <!-- The player's own requests -->
+  <div id="view-requests" hidden>
+    <div class="requests-wrap">
+      <div id="requestsList">
+        <p class="requests-empty">Loading your requests…</p>
       </div>
     </div>
   </div>
@@ -789,6 +959,7 @@ function claimBonus() {
     .then(res => {
       if (res.error) throw new Error(res.error);
       console.log("✓ Claim saved to server, id:", res.id);
+      loadMyRequests();   // the new request should appear under My Requests
     })
     .catch(err => {
       // Server unreachable — keep the claim locally so it isn't lost
@@ -824,6 +995,152 @@ function esc(s) {
   return String(s ?? "").replace(/[&<>"']/g, c => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
   }[c]));
+}
+
+/* ---------------- My Requests ---------------- */
+
+const STATUS_LABEL = { new: "Pending", approved: "Approved", paid: "Paid", rejected: "Declined" };
+let myRequests = [];
+
+function switchView(view) {
+  document.querySelectorAll(".view-tab").forEach(t =>
+    t.classList.toggle("active", t.dataset.view === view));
+  document.getElementById("view-bonuses").hidden = view !== "bonuses";
+  document.getElementById("view-requests").hidden = view !== "requests";
+
+  if (view === "requests") loadMyRequests();
+}
+
+function loadMyRequests() {
+  if (!currentUser) return;
+
+  const q = "?username=" + encodeURIComponent(currentUser.username) +
+            "&id=" + encodeURIComponent(currentUser.id);
+
+  fetch("/api/my-claims.php" + q)
+    .then(r => r.json())
+    .then(res => {
+      if (res.error) throw new Error(res.error);
+      myRequests = res.claims || [];
+      renderMyRequests();
+      updateRequestsBadge();
+    })
+    .catch(err => {
+      console.error("Could not load requests:", err);
+      document.getElementById("requestsList").innerHTML =
+        '<p class="requests-empty">Could not load your requests. Please try again later.</p>';
+    });
+}
+
+function updateRequestsBadge() {
+  const badge = document.getElementById("requestsBadge");
+  const notes = myRequests.reduce((n, r) => n + (r.admin_notes || 0), 0);
+  badge.textContent = notes;
+  badge.hidden = notes === 0;
+}
+
+function renderMyRequests() {
+  const list = document.getElementById("requestsList");
+
+  if (!myRequests.length) {
+    list.innerHTML = '<p class="requests-empty">You have not requested any bonuses yet.</p>';
+    return;
+  }
+
+  list.innerHTML = myRequests.map(r => {
+    const st = STATUS_LABEL[r.status] ? r.status : "new";
+    const notes = r.admin_notes || 0;
+
+    return `
+      <div class="request s-${st}">
+        <div class="request-head">
+          <span class="request-title">${esc(r.bonus_title)}</span>
+          <span class="request-amount">${esc(r.bonus_amount)}</span>
+          <span class="request-status ${st}">${STATUS_LABEL[st]}</span>
+        </div>
+        <div class="request-date">Requested ${esc(r.created_at)}</div>
+        <button type="button" class="request-toggle" onclick="toggleThread(${r.id})">
+          ${r.message_count ? "Messages" : "Ask a question"}
+          ${notes ? `<span class="unread">${notes}</span>` : ""}
+        </button>
+        <div class="thread" id="thread-${r.id}" hidden></div>
+      </div>`;
+  }).join("");
+}
+
+function toggleThread(claimId) {
+  const el = document.getElementById("thread-" + claimId);
+  if (!el.hidden) { el.hidden = true; return; }
+
+  el.hidden = false;
+  el.innerHTML = '<p class="requests-empty" style="padding:12px 0;">Loading…</p>';
+
+  const q = "?claim=" + claimId +
+            "&username=" + encodeURIComponent(currentUser.username) +
+            "&id=" + encodeURIComponent(currentUser.id);
+
+  fetch("/api/messages.php" + q)
+    .then(r => r.json())
+    .then(res => {
+      if (res.error) throw new Error(res.error);
+      renderThread(claimId, res.messages || []);
+    })
+    .catch(err => {
+      el.innerHTML = '<p class="requests-empty" style="padding:12px 0;">Could not load messages.</p>';
+      console.error(err);
+    });
+}
+
+function renderThread(claimId, messages) {
+  const el = document.getElementById("thread-" + claimId);
+
+  const thread = messages.length
+    ? messages.map(m => `
+        <div class="msg ${m.author === "admin" ? "admin" : "user"}">
+          <div class="msg-who">${m.author === "admin" ? "Support" : "You"}</div>
+          <div class="msg-body">${esc(m.body)}</div>
+          <div class="msg-time">${esc(m.created_at)}</div>
+        </div>`).join("")
+    : '<p class="requests-empty" style="padding:0 0 8px;">No messages yet. Ask us anything about this request.</p>';
+
+  el.innerHTML = thread + `
+    <div class="ask">
+      <textarea id="ask-${claimId}" maxlength="1000" placeholder="Write your question…"></textarea>
+      <button type="button" id="askbtn-${claimId}" onclick="sendQuestion(${claimId})">Send</button>
+    </div>`;
+}
+
+function sendQuestion(claimId) {
+  const box = document.getElementById("ask-" + claimId);
+  const btn = document.getElementById("askbtn-" + claimId);
+  const text = box.value.trim();
+
+  if (!text) { box.focus(); return; }
+
+  btn.disabled = true;
+  btn.textContent = "Sending…";
+
+  fetch("/api/messages.php", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      claim: claimId,
+      body: text,
+      username: currentUser.username,
+      userId: currentUser.id
+    })
+  })
+    .then(r => r.json())
+    .then(res => {
+      if (res.error) throw new Error(res.error);
+      box.value = "";
+      // Reload the thread so the new message appears with its real timestamp
+      document.getElementById("thread-" + claimId).hidden = true;
+      toggleThread(claimId);
+      loadMyRequests();
+    })
+    .catch(err => alert(err.message))
+    .finally(() => { btn.disabled = false; btn.textContent = "Send"; });
 }
 
 // A bonus logo is either an uploaded image, an emoji, or nothing — in which case
@@ -933,6 +1250,7 @@ function validateAccess() {
     loadSettings();
     loadSliderFromServer();
     loadBonusesFromServer();
+    loadMyRequests();   // fills the My Requests badge without opening the tab
     return;
   }
 

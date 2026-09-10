@@ -91,6 +91,16 @@ function db($fatal = true) {
         emoji VARCHAR(16) DEFAULT NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
+    // Two-way thread on a claim: admin notes and player questions.
+    $pdo->exec("CREATE TABLE IF NOT EXISTS claim_messages (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        claim_id INT NOT NULL,
+        author VARCHAR(16) NOT NULL,
+        body TEXT NOT NULL,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_claim (claim_id, id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
     $pdo->exec("CREATE TABLE IF NOT EXISTS activity_log (
         id INT AUTO_INCREMENT PRIMARY KEY,
         created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
