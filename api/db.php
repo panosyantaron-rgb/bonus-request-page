@@ -58,6 +58,12 @@ function db($fatal = true) {
         exit;
     }
 
+    // Force the connection to real 4-byte UTF-8. The DSN already asks for it,
+    // but if the server negotiates utf8mb3 instead, MySQL silently replaces every
+    // byte of a 4-byte character with "?" — which is how 🎰 became "????" while
+    // the 3-byte ⚽ survived. Any emoji a player types would hit the same wall.
+    $pdo->exec("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
+
     // Auto-create tables on first run
     $pdo->exec("CREATE TABLE IF NOT EXISTS claims (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -139,6 +145,36 @@ function db($fatal = true) {
     ];
     $seed = $pdo->prepare("INSERT IGNORE INTO settings (setting_key, setting_value) VALUES (?, ?)");
     foreach ($defaultSettings as $k => $v) $seed->execute([$k, $v]);
+
+    // ---- One-time migrations, tracked by schema_version in settings ----
+    // (schema_version is not in settings.php's allowlist, so the API never
+    //  exposes or accepts it — it is internal bookkeeping.)
+    $verQ = $pdo->query("SELECT setting_value FROM settings WHERE setting_key = 'schema_version'");
+    $ver  = (int) ($verQ->fetchColumn() ?: 0);
+
+    if ($ver < 2) {
+        // Tables created before the charset was forced may still be utf8mb3
+        foreach (['claims', 'bonuses', 'settings', 'slider_images', 'activity_log', 'claim_messages'] as $t) {
+            try {
+                $pdo->exec("ALTER TABLE `$t` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+            } catch (Throwable $e) {
+                // An older MySQL may refuse; the SET NAMES above still helps
+            }
+        }
+
+        // Put back the default emoji that were stored as literal question marks
+        $repair = [1 => '⚽', 2 => '🎰', 3 => '🎲', 4 => '🏆', 5 => '💎'];
+        $fix = $pdo->prepare(
+            "UPDATE slider_images SET emoji = ?
+             WHERE position = ? AND image IS NULL AND (emoji IS NULL OR emoji REGEXP '^[?]+$')"
+        );
+        foreach ($repair as $pos => $e) $fix->execute([$e, $pos]);
+
+        $pdo->prepare(
+            "INSERT INTO settings (setting_key, setting_value) VALUES ('schema_version', '2')
+             ON DUPLICATE KEY UPDATE setting_value = '2'"
+        )->execute();
+    }
 
     // Seed the 9 default bonuses once, only if the table is empty
     $count = (int) $pdo->query("SELECT COUNT(*) FROM bonuses")->fetchColumn();

@@ -540,23 +540,52 @@
       box-shadow: 0 5px 20px rgba(0, 255, 0, 0.3);
     }
 
-    /* ---------- Bonuses / My Requests switcher ---------- */
+    /* ---------- Bonuses / My Requests switcher ----------
+       .slider-content is absolutely positioned with bottom:-120px, so it hangs
+       roughly 60px BELOW its section. The padding-top here clears that overhang;
+       without it these controls render on top of the subtitle. */
     .view-tabs {
-      display: flex; gap: 10px; justify-content: center;
-      padding: 0 20px 6px; flex-wrap: wrap;
+      display: flex;
+      justify-content: center;
+      padding: 90px 20px 18px;
+      position: relative;
+      z-index: 3;
+    }
+    .view-tabs-inner {
+      display: inline-flex;
+      gap: 4px;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      padding: 5px;
+      max-width: 100%;
     }
     .view-tab {
-      background: transparent; border: none; border-bottom: 2px solid transparent;
-      color: var(--color-text-secondary); font-family: 'Poppins', sans-serif;
-      font-size: 15px; font-weight: 600; padding: 12px 18px; min-height: 46px;
-      cursor: pointer; transition: color 0.2s ease, border-color 0.2s ease;
+      background: transparent;
+      border: none;
+      border-radius: 9px;
+      color: var(--color-text-secondary);
+      font-family: 'Poppins', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 11px 22px;
+      min-height: 44px;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: background 0.2s ease, color 0.2s ease;
     }
-    .view-tab:hover { color: var(--color-text); }
-    .view-tab.active { color: var(--color-accent); border-bottom-color: var(--color-accent); }
+    .view-tab:hover { color: var(--color-text); background: rgba(255,255,255,0.05); }
+    .view-tab.active { background: var(--color-accent); color: #0f1419; }
     .view-badge {
-      display: inline-block; background: var(--color-accent); color: #0f1419;
-      font-size: 11px; font-weight: 700; border-radius: 20px;
-      padding: 1px 7px; margin-left: 4px; vertical-align: middle;
+      display: inline-block;
+      background: rgba(255,255,255,0.22);
+      color: inherit;
+      font-size: 11px; font-weight: 700;
+      border-radius: 20px; padding: 1px 7px; margin-left: 5px;
+      vertical-align: middle;
+    }
+    .view-tab:not(.active) .view-badge {
+      background: var(--color-accent); color: #0f1419;
     }
 
     /* ---------- My Requests ---------- */
@@ -675,8 +704,9 @@
       .error-box { padding: 26px 20px; }
       .error-box h1 { font-size: 24px; }
 
-      .view-tabs { gap: 4px; padding: 0 12px 4px; }
-      .view-tab { font-size: 14px; padding: 12px 14px; }
+      /* The hero is shorter here but .slider-content still hangs below it */
+      .view-tabs { padding: 76px 12px 14px; }
+      .view-tab { font-size: 13px; padding: 11px 15px; }
       .requests-wrap { padding: 14px 12px 50px; }
       .request { padding: 15px; }
       .request-status { margin-left: 0; }
@@ -742,10 +772,10 @@
 
   <!-- Bonuses vs. the player's own requests -->
   <div class="view-tabs">
-    <button class="view-tab active" data-view="bonuses" onclick="switchView('bonuses')">Bonuses</button>
-    <button class="view-tab" data-view="requests" onclick="switchView('requests')">
-      My Requests <span class="view-badge" id="requestsBadge" hidden>0</span>
-    </button>
+    <div class="view-tabs-inner">
+      <button class="view-tab active" data-view="bonuses" onclick="switchView('bonuses')">Bonuses</button>
+      <button class="view-tab" data-view="requests" onclick="switchView('requests')">My Requests<span class="view-badge" id="requestsBadge" hidden>0</span></button>
+    </div>
   </div>
 
   <div id="view-bonuses">
