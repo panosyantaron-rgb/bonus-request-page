@@ -3,7 +3,7 @@ require_once __DIR__ . '/config.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS');
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -53,6 +53,25 @@ function db() {
         category VARCHAR(32) NOT NULL,
         created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+    $pdo->exec("CREATE TABLE IF NOT EXISTS settings (
+        setting_key VARCHAR(64) PRIMARY KEY,
+        setting_value TEXT
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+    // Seed page settings once, only for keys that are missing
+    $defaultSettings = [
+        'section_title'  => 'Our Bonuses',
+        'page_title'     => 'Claim Your Bonus',
+        'page_subtitle'  => 'Select a bonus offer and start winning today',
+        'accent_color'   => '#00d9ff',
+        'tab_sport'      => 'Sport',
+        'tab_casino'     => 'Casino',
+        'tab_livecasino' => 'Live Casino',
+        'claim_button'   => 'Claim Bonus',
+    ];
+    $seed = $pdo->prepare("INSERT IGNORE INTO settings (setting_key, setting_value) VALUES (?, ?)");
+    foreach ($defaultSettings as $k => $v) $seed->execute([$k, $v]);
 
     // Seed the 9 default bonuses once, only if the table is empty
     $count = (int) $pdo->query("SELECT COUNT(*) FROM bonuses")->fetchColumn();

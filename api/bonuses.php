@@ -42,6 +42,40 @@ if ($method === 'POST') {
     exit;
 }
 
+// ---- Edit a bonus (ADMIN ONLY) ----
+if ($method === 'PUT') {
+    require_admin();
+
+    $d  = body();
+    $id = (int) ($d['id'] ?? 0);
+    if ($id <= 0) fail('id is required');
+
+    $title       = trim($d['title'] ?? '');
+    $amount      = trim($d['amount'] ?? '');
+    $description = trim($d['description'] ?? '');
+    $category    = trim($d['category'] ?? '');
+
+    // Validate before connecting, so a bad request never opens a connection
+    if ($title === '' || $amount === '' || $description === '') fail('All fields are required');
+    if (!in_array($category, ['sport', 'casino', 'livecasino'], true)) fail('Invalid category');
+
+    $pdo  = db();
+    $stmt = $pdo->prepare(
+        "UPDATE bonuses SET title = ?, amount = ?, description = ?, category = ? WHERE id = ?"
+    );
+    $stmt->execute([$title, $amount, $description, $category, $id]);
+
+    if ($stmt->rowCount() === 0) {
+        // Either the id is gone, or nothing actually changed — tell them apart
+        $exists = $pdo->prepare("SELECT 1 FROM bonuses WHERE id = ?");
+        $exists->execute([$id]);
+        if (!$exists->fetchColumn()) fail('No bonus with that id', 404);
+    }
+
+    echo json_encode(['ok' => true]);
+    exit;
+}
+
 // ---- Delete a bonus (ADMIN ONLY) ----
 if ($method === 'DELETE') {
     require_admin();

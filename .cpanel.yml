@@ -19,4 +19,5 @@ deployment:
     - /bin/cp api/login.php           $DEPLOYPATH/api/
     - /bin/cp api/claims.php          $DEPLOYPATH/api/
     - /bin/cp api/bonuses.php         $DEPLOYPATH/api/
+    - /bin/cp api/settings.php        $DEPLOYPATH/api/
     - /bin/cp api/config.example.php  $DEPLOYPATH/api/

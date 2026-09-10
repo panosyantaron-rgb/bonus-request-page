@@ -574,9 +574,9 @@
   <div class="categories-section">
     <div class="categories-container">
       <div class="category-tabs">
-        <button class="category-tab active" onclick="switchCategory(this)">Sport</button>
-        <button class="category-tab" onclick="switchCategory(this)">Casino</button>
-        <button class="category-tab" onclick="switchCategory(this)">Live Casino</button>
+        <button class="category-tab active" data-category="sport" onclick="switchCategory(this)">Sport</button>
+        <button class="category-tab" data-category="casino" onclick="switchCategory(this)">Casino</button>
+        <button class="category-tab" data-category="livecasino" onclick="switchCategory(this)">Live Casino</button>
       </div>
     </div>
   </div>
@@ -714,9 +714,9 @@ function resumeCarousel() { isPlaying = true; lastUpdateTime = 0; }
 function switchCategory(el) {
   document.querySelectorAll(".category-tab").forEach(tab => tab.classList.remove("active"));
   el.classList.add("active");
-  const categoryName = el.textContent.toLowerCase();
-  const categoryMap = { 'sport': 'sport', 'casino': 'casino', 'live casino': 'livecasino' };
-  const category = categoryMap[categoryName];
+  // Read the category off the attribute, not the label — the label is editable
+  // from the admin panel and renaming a tab must not break filtering.
+  const category = el.getAttribute("data-category");
   document.querySelectorAll(".bonus-card").forEach(card => {
     if (card.getAttribute("data-category") === category) {
       card.removeAttribute("data-hidden");
@@ -802,6 +802,43 @@ function closeSuccess() {
 }
 
 // Validation Logic
+function esc(s) {
+  return String(s ?? "").replace(/[&<>"']/g, c => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[c]));
+}
+
+// Page text and accent colour are editable from the admin panel. If the server
+// is unreachable the wording already in the HTML stays exactly as it is.
+function loadSettings() {
+  fetch("/api/settings.php")
+    .then(r => r.json())
+    .then(res => {
+      const s = res.settings;
+      if (!s) return;
+
+      const text = (selector, value) => {
+        if (!value) return;
+        const el = document.querySelector(selector);
+        if (el) el.textContent = value;
+      };
+
+      text(".slider-title-top", s.section_title);
+      text(".slider-title", s.page_title);
+      text(".slider-subtitle", s.page_subtitle);
+      text('.category-tab[data-category="sport"]', s.tab_sport);
+      text('.category-tab[data-category="casino"]', s.tab_casino);
+      text('.category-tab[data-category="livecasino"]', s.tab_livecasino);
+      text(".btn-primary", s.claim_button);
+
+      // Only ever accept a hex colour here — this value goes into a style property
+      if (s.accent_color && /^#[0-9a-fA-F]{6}$/.test(s.accent_color)) {
+        document.documentElement.style.setProperty("--color-accent", s.accent_color);
+      }
+    })
+    .catch(err => console.error("Could not load settings:", err));
+}
+
 // Load the bonus list from the server so admin-panel changes show up here.
 // If the server is unreachable, the cards already in the HTML stay as they are.
 function loadBonusesFromServer() {
@@ -814,17 +851,15 @@ function loadBonusesFromServer() {
 
       const grid = document.querySelector(".bonus-cards");
       const activeTab = document.querySelector(".category-tab.active");
-      const activeCategory = activeTab
-        ? ({ "sport": "sport", "casino": "casino", "live casino": "livecasino" })[activeTab.textContent.trim().toLowerCase()]
-        : "sport";
+      const activeCategory = activeTab ? activeTab.getAttribute("data-category") : "sport";
 
       grid.innerHTML = res.bonuses.map(b => `
-        <div class="bonus-card" data-category="${b.category}" onclick="selectBonus(this)"${b.category === activeCategory ? "" : ' data-hidden="true"'}>
+        <div class="bonus-card" data-category="${esc(b.category)}" onclick="selectBonus(this)"${b.category === activeCategory ? "" : ' data-hidden="true"'}>
           <div class="card-image"><div class="card-image-placeholder">${ICONS[b.category] || "🎁"}</div></div>
           <div class="card-content">
-            <h3 class="card-title">${b.title}</h3>
-            <p class="card-description">${b.description}</p>
-            <div class="card-amount">${b.amount}</div>
+            <h3 class="card-title">${esc(b.title)}</h3>
+            <p class="card-description">${esc(b.description)}</p>
+            <div class="card-amount">${esc(b.amount)}</div>
           </div>
         </div>
       `).join("");
@@ -845,6 +880,7 @@ function validateAccess() {
     currentUser = { username, id: userID };
     errorModal.style.display = "none";
     mainContent.classList.add("show");
+    loadSettings();
     loadBonusesFromServer();
     return;
   }

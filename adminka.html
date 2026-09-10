@@ -312,6 +312,122 @@
       font-weight: 700;
     }
 
+    .bonus-item-cat {
+      font-size: 11px;
+      color: var(--color-text-secondary);
+      margin-top: 4px;
+    }
+
+    .bonus-item-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    /* 40px minimum so these are comfortable to hit with a thumb */
+    .bonus-item-actions button {
+      flex: 1;
+      min-height: 40px;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid var(--color-border);
+      background: transparent;
+      color: var(--color-text);
+      font-family: 'Poppins', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .bonus-item-actions button:hover {
+      background: rgba(0, 217, 255, 0.12);
+      border-color: var(--color-accent);
+    }
+
+    .bonus-item-actions button.danger:hover {
+      background: rgba(255, 107, 107, 0.12);
+      border-color: var(--color-danger);
+      color: var(--color-danger);
+    }
+
+    .bonus-item.editing {
+      border-color: var(--color-accent);
+      background: rgba(0, 217, 255, 0.12);
+    }
+
+    .settings-form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .settings-form label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--color-text-secondary);
+      margin-bottom: 4px;
+      display: block;
+    }
+
+    .settings-form input {
+      width: 100%;
+      min-height: 42px;
+      padding: 10px 12px;
+      background: #0f1419;
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      color: var(--color-text);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+    }
+
+    .settings-form input[type="color"] {
+      padding: 4px;
+      height: 42px;
+      cursor: pointer;
+    }
+
+    .settings-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .btn-save {
+      min-height: 44px;
+      padding: 12px;
+      background: var(--color-accent);
+      border: none;
+      border-radius: 8px;
+      color: #0f1419;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .btn-ghost {
+      min-height: 44px;
+      padding: 12px;
+      background: transparent;
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      color: var(--color-text-secondary);
+      font-family: 'Poppins', sans-serif;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .save-note {
+      font-size: 12px;
+      color: var(--color-success);
+      display: none;
+      margin-top: 8px;
+    }
+
     @media (max-width: 768px) {
       .admin-grid {
         grid-template-columns: 1fr;
@@ -326,6 +442,33 @@
         text-align: center;
         margin-top: 16px;
       }
+    }
+
+    /* Phone. Inputs are 16px so iOS Safari does not zoom on focus. */
+    @media (max-width: 520px) {
+      /* minmax(350px,…) can overflow a narrow phone — force a single column */
+      .admin-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+
+      .admin-card { padding: 16px; }
+
+      .bonuses-list {
+        grid-template-columns: 1fr;
+        max-height: none;
+      }
+
+      .settings-row { grid-template-columns: 1fr; }
+
+      .bonus-form input,
+      .bonus-form textarea,
+      .bonus-form select,
+      .settings-form input {
+        font-size: 16px;
+      }
+
+      .bonus-form button { min-height: 44px; }
     }
   </style>
 </head>
@@ -381,10 +524,11 @@
       </div>
     </div>
 
-    <!-- Add Bonus Card -->
-    <div class="admin-card">
-      <h2>➕ Add New Bonus</h2>
+    <!-- Add / Edit Bonus Card -->
+    <div class="admin-card" id="bonusFormCard">
+      <h2 id="bonusFormHeading">➕ Add New Bonus</h2>
       <form class="bonus-form">
+        <input type="hidden" id="bonusEditId" value="" />
         <input type="text" id="bonusTitle" placeholder="Bonus Title" />
         <input type="text" id="bonusAmount" placeholder="Bonus Amount (e.g., +100%)" />
         <textarea id="bonusDescription" placeholder="Description" rows="2"></textarea>
@@ -393,8 +537,46 @@
           <option value="casino">Casino</option>
           <option value="livecasino">Live Casino</option>
         </select>
-        <button type="button" onclick="addBonus()">Add Bonus</button>
+        <button type="button" id="bonusSaveBtn" onclick="saveBonus()">Add Bonus</button>
+        <button type="button" class="btn-ghost" id="bonusCancelBtn" onclick="cancelEdit()" style="display: none;">Cancel</button>
       </form>
+    </div>
+
+    <!-- Page Settings Card -->
+    <div class="admin-card">
+      <h2>🎨 Page Text &amp; Look</h2>
+      <div class="settings-form">
+        <div>
+          <label for="setSectionTitle">Carousel heading</label>
+          <input type="text" id="setSectionTitle" />
+        </div>
+        <div>
+          <label for="setPageTitle">Main headline</label>
+          <input type="text" id="setPageTitle" />
+        </div>
+        <div>
+          <label for="setPageSubtitle">Subtitle</label>
+          <input type="text" id="setPageSubtitle" />
+        </div>
+        <div>
+          <label>Category tab names</label>
+          <div class="settings-row">
+            <input type="text" id="setTabSport" />
+            <input type="text" id="setTabCasino" />
+            <input type="text" id="setTabLive" />
+          </div>
+        </div>
+        <div>
+          <label for="setClaimButton">Claim button text</label>
+          <input type="text" id="setClaimButton" />
+        </div>
+        <div>
+          <label for="setAccentColor">Accent colour</label>
+          <input type="color" id="setAccentColor" />
+        </div>
+        <button type="button" class="btn-save" onclick="saveSettings()">Save Settings</button>
+        <div class="save-note" id="settingsSaved">✓ Saved — refresh the main page to see it</div>
+      </div>
     </div>
 
     <!-- Bonuses List Card -->
@@ -447,12 +629,23 @@
 let isLoggedIn = false;
 let claims = [];
 let bonuses = [];
+let settings = {};
 
 const API = {
   claims: "/api/claims.php",
   bonuses: "/api/bonuses.php",
+  settings: "/api/settings.php",
   login: "/api/login.php"
 };
+
+// Everything rendered below came from somewhere else — bonus text from the admin,
+// but usernames straight off the main page's URL parameters. Escape all of it, or
+// a claim made with a username like "<img src=x onerror=...>" runs script in here.
+function esc(s) {
+  return String(s ?? "").replace(/[&<>"']/g, c => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[c]));
+}
 
 // Pull claims + bonuses from the server database
 async function loadData() {
@@ -477,6 +670,16 @@ async function loadData() {
     claims = claimsRes.claims || [];
     bonuses = bonusesRes.bonuses || [];
     showApiError("");
+
+    // Settings are fetched separately and never fatal: if settings.php has not
+    // been deployed yet, claims and bonuses must still work.
+    try {
+      const settingsRes = await fetch(API.settings).then(r => r.json());
+      settings = settingsRes.settings || {};
+      fillSettingsForm();
+    } catch (e) {
+      console.warn("Settings unavailable (is api/settings.php deployed?):", e);
+    }
   } catch (err) {
     console.error("Could not load data from server:", err);
     showApiError("Cannot reach the database. Check api/config.php credentials on the server.");
@@ -549,32 +752,124 @@ function checkSession() {
     .catch(() => {});
 }
 
-function addBonus() {
-  const title = document.getElementById("bonusTitle").value.trim();
-  const amount = document.getElementById("bonusAmount").value.trim();
+// One form does both jobs — on a phone there is no room for two.
+function saveBonus() {
+  const editId      = document.getElementById("bonusEditId").value;
+  const title       = document.getElementById("bonusTitle").value.trim();
+  const amount      = document.getElementById("bonusAmount").value.trim();
   const description = document.getElementById("bonusDescription").value.trim();
-  const category = document.getElementById("bonusCategory").value;
+  const category    = document.getElementById("bonusCategory").value;
 
   if (!title || !amount || !description) {
     alert("Please fill in all fields");
     return;
   }
 
+  const editing = editId !== "";
+  const payload = editing
+    ? { id: Number(editId), title, amount, description, category }
+    : { title, amount, description, category };
+
   fetch(API.bonuses, {
-    method: "POST",
+    method: editing ? "PUT" : "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ title, amount, description, category })
+    body: JSON.stringify(payload)
   })
     .then(r => r.json())
     .then(res => {
       if (res.error) throw new Error(res.error);
-      document.getElementById("bonusTitle").value = "";
-      document.getElementById("bonusAmount").value = "";
-      document.getElementById("bonusDescription").value = "";
+      cancelEdit();
       loadData();
-      alert("✓ Bonus added successfully!");
     })
     .catch(err => alert("❌ Could not save bonus: " + err.message));
+}
+
+function startEdit(id) {
+  const b = bonuses.find(x => Number(x.id) === Number(id));
+  if (!b) return;
+
+  document.getElementById("bonusEditId").value      = b.id;
+  document.getElementById("bonusTitle").value       = b.title;
+  document.getElementById("bonusAmount").value      = b.amount;
+  document.getElementById("bonusDescription").value = b.description;
+  document.getElementById("bonusCategory").value    = b.category;
+
+  document.getElementById("bonusFormHeading").textContent = "✏️ Edit Bonus";
+  document.getElementById("bonusSaveBtn").textContent = "Save Changes";
+  document.getElementById("bonusCancelBtn").style.display = "block";
+
+  loadDashboard(); // re-render so the edited row highlights
+  document.getElementById("bonusFormCard").scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+function cancelEdit() {
+  document.getElementById("bonusEditId").value      = "";
+  document.getElementById("bonusTitle").value       = "";
+  document.getElementById("bonusAmount").value      = "";
+  document.getElementById("bonusDescription").value = "";
+  document.getElementById("bonusCategory").value    = "sport";
+
+  document.getElementById("bonusFormHeading").textContent = "➕ Add New Bonus";
+  document.getElementById("bonusSaveBtn").textContent = "Add Bonus";
+  document.getElementById("bonusCancelBtn").style.display = "none";
+
+  loadDashboard();
+}
+
+function deleteBonus(id) {
+  const b = bonuses.find(x => Number(x.id) === Number(id));
+  if (!b) return;
+  if (!confirm(`Delete "${b.title}"?\n\nIt will disappear from the main page. Claims already made are kept.`)) return;
+
+  fetch(API.bonuses + "?id=" + encodeURIComponent(id), { method: "DELETE" })
+    .then(r => r.json())
+    .then(res => {
+      if (res.error) throw new Error(res.error);
+      if (String(document.getElementById("bonusEditId").value) === String(id)) cancelEdit();
+      loadData();
+    })
+    .catch(err => alert("❌ Could not delete bonus: " + err.message));
+}
+
+const SETTING_FIELDS = {
+  section_title:  "setSectionTitle",
+  page_title:     "setPageTitle",
+  page_subtitle:  "setPageSubtitle",
+  tab_sport:      "setTabSport",
+  tab_casino:     "setTabCasino",
+  tab_livecasino: "setTabLive",
+  claim_button:   "setClaimButton",
+  accent_color:   "setAccentColor"
+};
+
+function fillSettingsForm() {
+  for (const [key, elId] of Object.entries(SETTING_FIELDS)) {
+    const el = document.getElementById(elId);
+    if (el && settings[key] != null) el.value = settings[key];
+  }
+}
+
+function saveSettings() {
+  const payload = {};
+  for (const [key, elId] of Object.entries(SETTING_FIELDS)) {
+    const el = document.getElementById(elId);
+    if (el) payload[key] = el.value;
+  }
+
+  fetch(API.settings, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  })
+    .then(r => r.json())
+    .then(res => {
+      if (res.error) throw new Error(res.error);
+      const note = document.getElementById("settingsSaved");
+      note.style.display = "block";
+      setTimeout(() => note.style.display = "none", 4000);
+      loadData();
+    })
+    .catch(err => alert("❌ Could not save settings: " + err.message));
 }
 
 function loadDashboard() {
@@ -588,21 +883,31 @@ function loadDashboard() {
   } else {
     claimsList.innerHTML = claims.map(claim => `
       <div class="claim-item">
-        <div class="claim-user">${claim.username} <span style="color: var(--color-text-secondary); font-weight: 400;">(ID: ${claim.user_id})</span></div>
-        <div class="claim-bonus">${claim.bonus_title} ${claim.bonus_amount}</div>
-        <div class="claim-time">${claim.created_at}</div>
+        <div class="claim-user">${esc(claim.username)} <span style="color: var(--color-text-secondary); font-weight: 400;">(ID: ${esc(claim.user_id)})</span></div>
+        <div class="claim-bonus">${esc(claim.bonus_title)} ${esc(claim.bonus_amount)}</div>
+        <div class="claim-time">${esc(claim.created_at)}</div>
       </div>
     `).join("");
   }
 
   const bonusesList = document.getElementById("bonusesList");
-  bonusesList.innerHTML = bonuses.map(bonus => `
-    <div class="bonus-item">
-      <div class="bonus-item-title">${bonus.title}</div>
-      <div class="bonus-item-amount">${bonus.amount}</div>
-      <div style="font-size: 11px; color: var(--color-text-secondary); margin-top: 4px;">${bonus.category}</div>
-    </div>
-  `).join("");
+  const editingId = document.getElementById("bonusEditId").value;
+
+  if (bonuses.length === 0) {
+    bonusesList.innerHTML = '<p style="color: var(--color-text-secondary); font-size: 12px;">No bonuses yet — add one above.</p>';
+  } else {
+    bonusesList.innerHTML = bonuses.map(bonus => `
+      <div class="bonus-item${String(bonus.id) === String(editingId) ? " editing" : ""}">
+        <div class="bonus-item-title">${esc(bonus.title)}</div>
+        <div class="bonus-item-amount">${esc(bonus.amount)}</div>
+        <div class="bonus-item-cat">${esc(bonus.category)}</div>
+        <div class="bonus-item-actions">
+          <button type="button" onclick="startEdit(${Number(bonus.id)})">Edit</button>
+          <button type="button" class="danger" onclick="deleteBonus(${Number(bonus.id)})">Delete</button>
+        </div>
+      </div>
+    `).join("");
+  }
 
   const sportCount = bonuses.filter(b => b.category === "sport").length;
   const casinoCount = bonuses.filter(b => b.category === "casino").length;
