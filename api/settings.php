@@ -68,6 +68,8 @@ if ($method === 'POST') {
     );
     foreach ($clean as $key => $value) $stmt->execute([$key, $value]);
 
+    activity('settings.update', 'Changed: ' . implode(', ', array_keys($clean)));
+
     echo json_encode(['ok' => true, 'saved' => count($clean)]);
     exit;
 }

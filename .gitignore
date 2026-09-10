@@ -5,3 +5,6 @@ node_modules/
 
 # Server credentials — never commit
 api/config.php
+
+# Uploaded images live on the server only
+uploads/

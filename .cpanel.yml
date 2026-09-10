@@ -13,11 +13,7 @@ deployment:
     - /bin/cp bg.png          $DEPLOYPATH/
     - /bin/cp .htaccess       $DEPLOYPATH/
 
-    # Backend API (config.php is NOT copied — it stays on the server with your real credentials)
-    - /bin/cp api/db.php              $DEPLOYPATH/api/
-    - /bin/cp api/auth.php            $DEPLOYPATH/api/
-    - /bin/cp api/login.php           $DEPLOYPATH/api/
-    - /bin/cp api/claims.php          $DEPLOYPATH/api/
-    - /bin/cp api/bonuses.php         $DEPLOYPATH/api/
-    - /bin/cp api/settings.php        $DEPLOYPATH/api/
-    - /bin/cp api/config.example.php  $DEPLOYPATH/api/
+    # Backend API — copied as a group so a new endpoint can never be
+    # left behind. api/config.php is gitignored, so it is not in the repo
+    # and the server's real credentials are never overwritten.
+    - /bin/cp -r api/*.php $DEPLOYPATH/api/

@@ -2,709 +2,531 @@
 <html>
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Admin Panel - Bonus Management</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap">
   <style>
     :root {
-      --color-bg: #0f1419;
-      --color-surface: #1a1f2e;
-      --color-surface-alt: #252d3d;
-      --color-text: #ffffff;
-      --color-text-secondary: #a0aac0;
-      --color-accent: #00d9ff;
-      --color-accent-dark: #0099cc;
-      --color-border: #2a3244;
-      --color-success: #00ff00;
-      --color-danger: #ff6b6b;
-    }
-
-    @media (prefers-color-scheme: light) {
-      :root:not([data-theme="dark"]) {
-        --color-bg: #f8f9fc;
-        --color-surface: #ffffff;
-        --color-surface-alt: #f0f3f8;
-        --color-text: #0f1419;
-        --color-text-secondary: #4a5568;
-        --color-accent: #00a8cc;
-        --color-accent-dark: #0078a0;
-        --color-border: #e2e8f0;
-      }
+      --bg: #0f1419;
+      --surface: #1a1f2e;
+      --surface-alt: #252d3d;
+      --text: #ffffff;
+      --muted: #a0aac0;
+      --accent: #00d9ff;
+      --accent-dark: #0099cc;
+      --border: #2a3244;
+      --ok: #35d07f;
+      --warn: #ffb020;
+      --danger: #ff6b6b;
+      --sidebar-w: 232px;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: var(--color-bg);
-      color: var(--color-text);
-      overflow-x: hidden;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-text-size-adjust: 100%;
     }
 
-    /* Login Screen */
+    /* ---------- Login ---------- */
     #loginModal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(15, 20, 25, 0.95);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-      backdrop-filter: blur(4px);
+      position: fixed; inset: 0;
+      background: rgba(15, 20, 25, 0.96);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 9999; padding: 20px;
     }
-
     .login-box {
       background: linear-gradient(135deg, #1a1f2e 0%, #252d3d 100%);
-      border: 1px solid var(--color-accent);
-      border-radius: 12px;
-      padding: 40px;
-      width: 100%;
-      max-width: 400px;
-      text-align: center;
-      box-shadow: 0 8px 32px rgba(0, 217, 255, 0.2);
+      border: 1px solid var(--accent);
+      border-radius: 14px; padding: 36px;
+      width: 100%; max-width: 380px; text-align: center;
+      box-shadow: 0 8px 40px rgba(0, 217, 255, 0.15);
     }
-
     .login-box h1 {
-      font-family: 'Poppins', sans-serif;
-      font-size: 28px;
-      font-weight: 700;
-      margin-bottom: 12px;
-      color: var(--color-accent);
+      font-family: 'Poppins', sans-serif; font-size: 24px;
+      margin-bottom: 8px; color: var(--accent);
     }
-
-    .login-box p {
-      color: var(--color-text-secondary);
-      font-size: 14px;
-      margin-bottom: 30px;
-    }
-
+    .login-box p { color: var(--muted); font-size: 13px; margin-bottom: 26px; }
     .login-box input {
-      width: 100%;
-      padding: 12px 16px;
-      background: #0f1419;
-      border: 1px solid var(--color-border);
-      border-radius: 8px;
-      color: var(--color-text);
-      font-size: 14px;
-      margin-bottom: 12px;
-      font-family: 'Inter', sans-serif;
+      width: 100%; min-height: 46px; padding: 12px 14px; margin-bottom: 12px;
+      background: var(--bg); border: 1px solid var(--border); border-radius: 9px;
+      color: var(--text); font-size: 16px; font-family: 'Inter', sans-serif;
     }
-
     .login-box button {
-      width: 100%;
-      padding: 12px 16px;
-      background: var(--color-accent);
-      border: none;
-      border-radius: 8px;
-      color: #0f1419;
-      font-weight: 600;
-      font-size: 14px;
-      cursor: pointer;
-      font-family: 'Poppins', sans-serif;
-      transition: all 0.3s ease;
+      width: 100%; min-height: 46px; background: var(--accent); border: none;
+      border-radius: 9px; color: #0f1419; font-weight: 600; font-size: 15px;
+      cursor: pointer; font-family: 'Poppins', sans-serif;
+    }
+    #loginError { color: var(--danger); font-size: 12px; margin-top: 12px; display: none; }
+
+    /* ---------- Shell ---------- */
+    #adminPanel { display: none; }
+    #adminPanel.show { display: flex; min-height: 100vh; }
+
+    .sidebar {
+      width: var(--sidebar-w); flex-shrink: 0;
+      background: var(--surface); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      position: sticky; top: 0; height: 100vh;
+    }
+    .brand {
+      padding: 22px 20px 18px; border-bottom: 1px solid var(--border);
+    }
+    .brand h1 {
+      font-family: 'Poppins', sans-serif; font-size: 16px; color: var(--accent);
+    }
+    .brand span { font-size: 11px; color: var(--muted); }
+
+    .nav { flex: 1; padding: 12px 10px; display: flex; flex-direction: column; gap: 3px; overflow-y: auto; }
+    .nav button {
+      display: flex; align-items: center; gap: 10px;
+      width: 100%; min-height: 42px; padding: 10px 12px;
+      background: transparent; border: none; border-radius: 8px;
+      color: var(--muted); font-family: 'Inter', sans-serif;
+      font-size: 14px; font-weight: 500; text-align: left; cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+    .nav button:hover { background: rgba(255,255,255,0.04); color: var(--text); }
+    .nav button.active { background: rgba(0,217,255,0.12); color: var(--accent); font-weight: 600; }
+    .nav .badge {
+      margin-left: auto; background: var(--accent); color: #0f1419;
+      font-size: 11px; font-weight: 700; border-radius: 20px; padding: 2px 7px;
+      min-width: 20px; text-align: center;
+    }
+    .nav .badge.zero { display: none; }
+
+    .sidebar-foot { padding: 14px; border-top: 1px solid var(--border); }
+    .sidebar-foot .who { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+    .sidebar-foot button {
+      width: 100%; min-height: 40px; background: transparent;
+      border: 1px solid var(--border); border-radius: 8px; color: var(--muted);
+      font-family: 'Poppins', sans-serif; font-size: 13px; cursor: pointer;
+    }
+    .sidebar-foot button:hover { border-color: var(--danger); color: var(--danger); }
+
+    .content { flex: 1; padding: 28px 32px 60px; min-width: 0; }
+    .section { display: none; }
+    .section.active { display: block; }
+    .section > h2 {
+      font-family: 'Poppins', sans-serif; font-size: 22px; margin-bottom: 4px;
+    }
+    .section > .lede { color: var(--muted); font-size: 13px; margin-bottom: 24px; }
+
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 20px; margin-bottom: 20px;
+    }
+    .card h3 {
+      font-family: 'Poppins', sans-serif; font-size: 15px; margin-bottom: 14px;
     }
 
-    .login-box button:hover {
-      background: var(--color-accent-dark);
+    /* ---------- Stats ---------- */
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-bottom: 20px; }
+    .stat {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 18px;
+    }
+    .stat .n { font-family: 'Poppins', sans-serif; font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .stat .l { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; margin-top: 4px; }
+    .stat.new .n { color: var(--accent); }
+    .stat.approved .n { color: var(--warn); }
+    .stat.paid .n { color: var(--ok); }
+    .stat.rejected .n { color: var(--danger); }
+
+    /* ---------- Claims ---------- */
+    .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .filters button {
+      min-height: 38px; padding: 8px 14px; border-radius: 20px;
+      border: 1px solid var(--border); background: transparent; color: var(--muted);
+      font-family: 'Inter', sans-serif; font-size: 13px; cursor: pointer;
+    }
+    .filters button.active { background: var(--accent); border-color: var(--accent); color: #0f1419; font-weight: 600; }
+
+    .claim {
+      background: var(--surface); border: 1px solid var(--border);
+      border-left: 3px solid var(--border);
+      border-radius: 10px; padding: 16px; margin-bottom: 12px;
+    }
+    .claim.s-new { border-left-color: var(--accent); }
+    .claim.s-approved { border-left-color: var(--warn); }
+    .claim.s-paid { border-left-color: var(--ok); }
+    .claim.s-rejected { border-left-color: var(--danger); }
+
+    .claim-top { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
+    .claim-user { font-weight: 600; }
+    .claim-id { font-size: 12px; color: var(--muted); }
+    .claim-bonus { color: var(--accent); font-size: 14px; margin: 6px 0 2px; }
+    .claim-time { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+    .pill {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.05em; padding: 3px 9px; border-radius: 20px;
+      margin-left: auto;
+    }
+    .pill.new { background: rgba(0,217,255,0.15); color: var(--accent); }
+    .pill.approved { background: rgba(255,176,32,0.15); color: var(--warn); }
+    .pill.paid { background: rgba(53,208,127,0.15); color: var(--ok); }
+    .pill.rejected { background: rgba(255,107,107,0.15); color: var(--danger); }
+
+    .status-btns { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+    .status-btns button {
+      flex: 1 1 auto; min-width: 84px; min-height: 38px; padding: 7px 10px;
+      border-radius: 7px; border: 1px solid var(--border); background: transparent;
+      color: var(--muted); font-family: 'Poppins', sans-serif; font-size: 12px;
+      font-weight: 600; cursor: pointer; transition: all 0.15s ease;
+    }
+    .status-btns button:hover { color: var(--text); border-color: var(--accent); }
+    .status-btns button.current { background: rgba(255,255,255,0.06); color: var(--text); cursor: default; }
+    .status-btns button.link { flex: 0 0 auto; min-width: 0; border-color: transparent; }
+    .status-btns button.link:hover { color: var(--accent); border-color: transparent; }
+
+    .timeline { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); display: none; }
+    .timeline.open { display: block; }
+    .timeline .row { font-size: 12px; color: var(--muted); padding: 3px 0; font-variant-numeric: tabular-nums; }
+    .timeline .row b { color: var(--text); font-weight: 500; }
+
+    /* ---------- Forms ---------- */
+    .form { display: flex; flex-direction: column; gap: 12px; }
+    .form label {
+      font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+      color: var(--muted); display: block; margin-bottom: 5px;
+    }
+    .form input[type=text], .form textarea, .form select {
+      width: 100%; min-height: 44px; padding: 11px 13px;
+      background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text); font-family: 'Inter', sans-serif; font-size: 15px;
+    }
+    .form textarea { min-height: 70px; resize: vertical; }
+    .form input[type=color] { width: 100%; height: 46px; padding: 4px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; }
+    .row3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+
+    .btn {
+      min-height: 46px; padding: 12px 18px; border-radius: 9px; border: none;
+      background: var(--accent); color: #0f1419; font-family: 'Poppins', sans-serif;
+      font-weight: 600; font-size: 14px; cursor: pointer;
+    }
+    .btn.ghost { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+    .btn.ghost:hover { border-color: var(--danger); color: var(--danger); }
+
+    /* ---------- Logo / image picker ---------- */
+    .picker { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    .thumb {
+      width: 64px; height: 64px; flex-shrink: 0;
+      border: 1px solid var(--border); border-radius: 10px;
+      background: var(--bg); display: flex; align-items: center; justify-content: center;
+      font-size: 30px; overflow: hidden;
+    }
+    .thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .picker-actions { display: flex; gap: 8px; flex-wrap: wrap; flex: 1; min-width: 180px; }
+    .picker-actions .btn { min-height: 40px; padding: 9px 14px; font-size: 13px; flex: 1 1 auto; }
+    .file-input { display: none; }
+    .hint { font-size: 11px; color: var(--muted); margin-top: 6px; }
+    .uploading { font-size: 12px; color: var(--accent); display: none; }
+    .uploading.on { display: block; }
+
+    /* ---------- Bonuses ---------- */
+    .bonus-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+    .bonus {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 14px;
+    }
+    .bonus.editing { border-color: var(--accent); background: rgba(0,217,255,0.07); }
+    .bonus-head { display: flex; gap: 12px; align-items: center; margin-bottom: 10px; }
+    .bonus-title { font-weight: 600; font-size: 14px; }
+    .bonus-amount { color: var(--ok); font-weight: 700; font-size: 15px; }
+    .bonus-cat { font-size: 11px; color: var(--muted); }
+    .bonus-actions { display: flex; gap: 8px; }
+    .bonus-actions button {
+      flex: 1; min-height: 38px; border-radius: 7px; border: 1px solid var(--border);
+      background: transparent; color: var(--text); font-family: 'Poppins', sans-serif;
+      font-size: 12px; font-weight: 600; cursor: pointer;
+    }
+    .bonus-actions button:hover { border-color: var(--accent); background: rgba(0,217,255,0.1); }
+    .bonus-actions button.danger:hover { border-color: var(--danger); color: var(--danger); background: rgba(255,107,107,0.1); }
+
+    /* ---------- Slider ---------- */
+    .slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+    .slot { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+    .slot-n { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+    .slot .thumb { width: 100%; height: 96px; margin-bottom: 10px; font-size: 40px; }
+
+    /* ---------- Logs ---------- */
+    .log { border-bottom: 1px solid var(--border); padding: 10px 0; font-size: 13px; display: flex; gap: 12px; }
+    .log:last-child { border-bottom: none; }
+    .log .when { color: var(--muted); font-size: 12px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .log .what { flex: 1; min-width: 0; word-break: break-word; }
+    .log .act { font-size: 11px; color: var(--muted); }
+    .log.warning .what { color: var(--warn); }
+    .log.error .what { color: var(--danger); }
+    .log-wrap { max-height: 60vh; overflow-y: auto; }
+
+    .empty { color: var(--muted); font-size: 13px; padding: 8px 0; }
+    .note { font-size: 12px; color: var(--ok); display: none; margin-top: 10px; }
+    .note.on { display: block; }
+    #apiError {
+      display: none; background: #3a1f26; border: 1px solid var(--danger);
+      color: #ff9b9b; padding: 12px 16px; border-radius: 9px;
+      margin-bottom: 20px; font-size: 13px;
     }
 
-    .login-error {
-      color: var(--color-danger);
-      font-size: 12px;
-      margin-top: 12px;
-      display: none;
-    }
-
-    /* Admin Panel */
-    #adminPanel {
-      display: none;
-      min-height: 100vh;
-      padding: 20px;
-    }
-
-    #adminPanel.show {
-      display: block;
-    }
-
-    .admin-header {
-      background: linear-gradient(135deg, var(--color-surface) 0%, var(--color-surface-alt) 100%);
-      padding: 30px;
-      border-radius: 12px;
-      margin-bottom: 30px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border: 1px solid var(--color-border);
-    }
-
-    .admin-header h1 {
-      font-family: 'Poppins', sans-serif;
-      font-size: 32px;
-      font-weight: 700;
-      color: var(--color-accent);
-    }
-
-    .admin-header .user-info {
-      text-align: right;
-    }
-
-    .admin-header .user-info p {
-      color: var(--color-text-secondary);
-      font-size: 14px;
-    }
-
-    .logout-btn {
-      padding: 10px 20px;
-      background: var(--color-danger);
-      border: none;
-      border-radius: 8px;
-      color: #ffffff;
-      font-weight: 600;
-      cursor: pointer;
-      font-family: 'Poppins', sans-serif;
-      margin-top: 10px;
-    }
-
-    .logout-btn:hover {
-      opacity: 0.8;
-    }
-
-    .admin-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-      gap: 30px;
-      max-width: 1400px;
-      margin: 0 auto;
-    }
-
-    .admin-card {
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
-      border-radius: 12px;
-      padding: 24px;
-      transition: all 0.3s ease;
-    }
-
-    .admin-card:hover {
-      border-color: var(--color-accent);
-      box-shadow: 0 10px 30px rgba(0, 217, 255, 0.1);
-    }
-
-    .admin-card h2 {
-      font-family: 'Poppins', sans-serif;
-      font-size: 20px;
-      font-weight: 700;
-      margin-bottom: 16px;
-      color: var(--color-accent);
-    }
-
-    .stat-box {
-      background: rgba(0, 217, 255, 0.1);
-      border-left: 4px solid var(--color-accent);
-      padding: 16px;
-      border-radius: 8px;
-      margin-bottom: 12px;
-    }
-
-    .stat-value {
-      font-size: 28px;
-      font-weight: 700;
-      color: var(--color-accent);
-      font-family: 'Poppins', sans-serif;
-    }
-
-    .stat-label {
-      font-size: 12px;
-      color: var(--color-text-secondary);
-      margin-top: 4px;
-    }
-
-    .claims-list {
-      max-height: 400px;
-      overflow-y: auto;
-    }
-
-    .claim-item {
-      background: rgba(0, 217, 255, 0.05);
-      padding: 12px;
-      border-radius: 8px;
-      margin-bottom: 10px;
-      border-left: 3px solid var(--color-success);
-    }
-
-    .claim-user {
-      font-weight: 600;
-      color: var(--color-text);
-      font-size: 14px;
-    }
-
-    .claim-bonus {
-      font-size: 12px;
-      color: var(--color-accent);
-      margin-top: 4px;
-    }
-
-    .claim-time {
-      font-size: 11px;
-      color: var(--color-text-secondary);
-      margin-top: 4px;
-    }
-
-    .bonus-form {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .bonus-form input, .bonus-form textarea {
-      padding: 10px 12px;
-      background: #0f1419;
-      border: 1px solid var(--color-border);
-      border-radius: 8px;
-      color: var(--color-text);
-      font-family: 'Inter', sans-serif;
-      font-size: 13px;
-    }
-
-    .bonus-form button {
-      padding: 10px 16px;
-      background: var(--color-accent);
-      border: none;
-      border-radius: 8px;
-      color: #0f1419;
-      font-weight: 600;
-      cursor: pointer;
-      font-family: 'Poppins', sans-serif;
-      transition: all 0.3s ease;
-    }
-
-    .bonus-form button:hover {
-      background: var(--color-accent-dark);
-    }
-
-    .bonuses-list {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 12px;
-      max-height: 400px;
-      overflow-y: auto;
-    }
-
-    .bonus-item {
-      background: rgba(0, 217, 255, 0.05);
-      padding: 12px;
-      border-radius: 8px;
-      border: 1px solid var(--color-border);
-      font-size: 12px;
-    }
-
-    .bonus-item-title {
-      font-weight: 600;
-      color: var(--color-accent);
-      margin-bottom: 4px;
-    }
-
-    .bonus-item-amount {
-      color: var(--color-success);
-      font-size: 14px;
-      font-weight: 700;
-    }
-
-    .bonus-item-cat {
-      font-size: 11px;
-      color: var(--color-text-secondary);
-      margin-top: 4px;
-    }
-
-    .bonus-item-actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 10px;
-    }
-
-    /* 40px minimum so these are comfortable to hit with a thumb */
-    .bonus-item-actions button {
-      flex: 1;
-      min-height: 40px;
-      padding: 8px;
-      border-radius: 6px;
-      border: 1px solid var(--color-border);
-      background: transparent;
-      color: var(--color-text);
-      font-family: 'Poppins', sans-serif;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .bonus-item-actions button:hover {
-      background: rgba(0, 217, 255, 0.12);
-      border-color: var(--color-accent);
-    }
-
-    .bonus-item-actions button.danger:hover {
-      background: rgba(255, 107, 107, 0.12);
-      border-color: var(--color-danger);
-      color: var(--color-danger);
-    }
-
-    .bonus-item.editing {
-      border-color: var(--color-accent);
-      background: rgba(0, 217, 255, 0.12);
-    }
-
-    .settings-form {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .settings-form label {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: var(--color-text-secondary);
-      margin-bottom: 4px;
-      display: block;
-    }
-
-    .settings-form input {
-      width: 100%;
-      min-height: 42px;
-      padding: 10px 12px;
-      background: #0f1419;
-      border: 1px solid var(--color-border);
-      border-radius: 8px;
-      color: var(--color-text);
-      font-family: 'Inter', sans-serif;
-      font-size: 14px;
-    }
-
-    .settings-form input[type="color"] {
-      padding: 4px;
-      height: 42px;
-      cursor: pointer;
-    }
-
-    .settings-row {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-    }
-
-    .btn-save {
-      min-height: 44px;
-      padding: 12px;
-      background: var(--color-accent);
-      border: none;
-      border-radius: 8px;
-      color: #0f1419;
-      font-family: 'Poppins', sans-serif;
-      font-weight: 600;
-      font-size: 14px;
-      cursor: pointer;
-    }
-
-    .btn-ghost {
-      min-height: 44px;
-      padding: 12px;
-      background: transparent;
-      border: 1px solid var(--color-border);
-      border-radius: 8px;
-      color: var(--color-text-secondary);
-      font-family: 'Poppins', sans-serif;
-      font-weight: 600;
-      font-size: 14px;
-      cursor: pointer;
-    }
-
-    .save-note {
-      font-size: 12px;
-      color: var(--color-success);
-      display: none;
-      margin-top: 8px;
-    }
-
-    @media (max-width: 768px) {
-      .admin-grid {
-        grid-template-columns: 1fr;
+    /* ---------- Phone: sidebar becomes a top bar ---------- */
+    @media (max-width: 780px) {
+      #adminPanel.show { flex-direction: column; }
+      .sidebar {
+        width: 100%; height: auto; position: static;
+        border-right: none; border-bottom: 1px solid var(--border);
       }
-
-      .admin-header {
-        flex-direction: column;
-        text-align: center;
+      .brand { padding: 14px 16px 10px; border-bottom: none; }
+      .nav {
+        flex-direction: row; overflow-x: auto; padding: 0 10px 10px;
+        gap: 6px; -webkit-overflow-scrolling: touch;
       }
-
-      .admin-header .user-info {
-        text-align: center;
-        margin-top: 16px;
-      }
-    }
-
-    /* Phone. Inputs are 16px so iOS Safari does not zoom on focus. */
-    @media (max-width: 520px) {
-      /* minmax(350px,…) can overflow a narrow phone — force a single column */
-      .admin-grid {
-        grid-template-columns: 1fr;
-        gap: 16px;
-      }
-
-      .admin-card { padding: 16px; }
-
-      .bonuses-list {
-        grid-template-columns: 1fr;
-        max-height: none;
-      }
-
-      .settings-row { grid-template-columns: 1fr; }
-
-      .bonus-form input,
-      .bonus-form textarea,
-      .bonus-form select,
-      .settings-form input {
-        font-size: 16px;
-      }
-
-      .bonus-form button { min-height: 44px; }
+      .nav button { width: auto; white-space: nowrap; flex-shrink: 0; }
+      .sidebar-foot { display: flex; align-items: center; gap: 12px; padding: 10px 16px; }
+      .sidebar-foot .who { margin-bottom: 0; flex: 1; }
+      .sidebar-foot button { width: auto; padding: 0 16px; }
+      .content { padding: 20px 14px 60px; }
+      .row3 { grid-template-columns: 1fr; }
+      .bonus-grid, .slots { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
 
-<!-- Login Modal -->
+<!-- ================= Login ================= -->
 <div id="loginModal">
   <div class="login-box">
-    <h1>🔐 Admin Login</h1>
-    <p>Enter admin credentials to access the panel</p>
-    <input type="text" id="adminUser" placeholder="Admin Username" />
-    <input type="password" id="adminPass" placeholder="Admin Password" />
-    <button onclick="adminLogin()">Login</button>
-    <div class="login-error" id="loginError">Invalid credentials</div>
+    <h1>🔒 Admin Login</h1>
+    <p>Enter your credentials to continue</p>
+    <input type="text" id="adminUser" placeholder="Username" autocomplete="username" />
+    <input type="password" id="adminPass" placeholder="Password" autocomplete="current-password" />
+    <button onclick="adminLogin()">Sign in</button>
+    <p id="loginError"></p>
   </div>
 </div>
 
-<!-- Admin Panel -->
+<!-- ================= Panel ================= -->
 <div id="adminPanel">
-  <div class="admin-header">
-    <div>
-      <h1>⚙️ Admin Panel</h1>
-    </div>
-    <div class="user-info">
-      <p>Logged in as: <strong id="adminUsername">Admin</strong></p>
-      <button class="logout-btn" onclick="adminLogout()">Logout</button>
-    </div>
-  </div>
 
-  <div class="admin-grid">
-    <!-- Statistics Card -->
-    <div class="admin-card">
-      <h2>📊 Statistics</h2>
-      <div class="stat-box">
-        <div class="stat-value" id="totalClaims">0</div>
-        <div class="stat-label">Total Bonuses Claimed</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-value" id="totalUsers">0</div>
-        <div class="stat-label">Unique Users</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-value" id="totalBonuses">9</div>
-        <div class="stat-label">Available Bonuses</div>
-      </div>
+  <aside class="sidebar">
+    <div class="brand">
+      <h1>Bonus Admin</h1>
+      <span>reward-gate.live</span>
     </div>
 
-    <!-- Recent Claims Card -->
-    <div class="admin-card">
-      <h2>🎁 Recent Claims</h2>
-      <div class="claims-list" id="claimsList">
-        <p style="color: var(--color-text-secondary); font-size: 12px;">No claims yet</p>
+    <nav class="nav" id="nav">
+      <button data-section="dashboard" onclick="showSection('dashboard')">📊 Dashboard</button>
+      <button data-section="claims" onclick="showSection('claims')">🎁 Claims <span class="badge zero" id="navNew">0</span></button>
+      <button data-section="bonuses" onclick="showSection('bonuses')">💎 Bonuses</button>
+      <button data-section="slider" onclick="showSection('slider')">🖼️ Slider</button>
+      <button data-section="settings" onclick="showSection('settings')">🎨 Page Text</button>
+      <button data-section="logs" onclick="showSection('logs')">📜 Logs</button>
+    </nav>
+
+    <div class="sidebar-foot">
+      <div class="who">Signed in as <b id="adminUsername">admin</b></div>
+      <button onclick="adminLogout()">Sign out</button>
+    </div>
+  </aside>
+
+  <main class="content">
+    <div id="apiError"></div>
+
+    <!-- ---------- Dashboard ---------- -->
+    <section class="section active" id="s-dashboard">
+      <h2>Dashboard</h2>
+      <p class="lede">Everything at a glance.</p>
+
+      <div class="stats">
+        <div class="stat"><div class="n" id="stTotal">0</div><div class="l">Total claims</div></div>
+        <div class="stat"><div class="n" id="stUsers">0</div><div class="l">Unique players</div></div>
+        <div class="stat"><div class="n" id="stBonuses">0</div><div class="l">Active bonuses</div></div>
       </div>
-    </div>
 
-    <!-- Add / Edit Bonus Card -->
-    <div class="admin-card" id="bonusFormCard">
-      <h2 id="bonusFormHeading">➕ Add New Bonus</h2>
-      <form class="bonus-form">
-        <input type="hidden" id="bonusEditId" value="" />
-        <input type="text" id="bonusTitle" placeholder="Bonus Title" />
-        <input type="text" id="bonusAmount" placeholder="Bonus Amount (e.g., +100%)" />
-        <textarea id="bonusDescription" placeholder="Description" rows="2"></textarea>
-        <select id="bonusCategory" style="padding: 10px 12px; background: #0f1419; border: 1px solid var(--color-border); border-radius: 8px; color: var(--color-text); font-family: 'Inter', sans-serif; font-size: 13px;">
-          <option value="sport">Sport</option>
-          <option value="casino">Casino</option>
-          <option value="livecasino">Live Casino</option>
-        </select>
-        <button type="button" id="bonusSaveBtn" onclick="saveBonus()">Add Bonus</button>
-        <button type="button" class="btn-ghost" id="bonusCancelBtn" onclick="cancelEdit()" style="display: none;">Cancel</button>
-      </form>
-    </div>
+      <div class="stats">
+        <div class="stat new"><div class="n" id="stNew">0</div><div class="l">New</div></div>
+        <div class="stat approved"><div class="n" id="stApproved">0</div><div class="l">Approved</div></div>
+        <div class="stat paid"><div class="n" id="stPaid">0</div><div class="l">Paid</div></div>
+        <div class="stat rejected"><div class="n" id="stRejected">0</div><div class="l">Rejected</div></div>
+      </div>
 
-    <!-- Page Settings Card -->
-    <div class="admin-card">
-      <h2>🎨 Page Text &amp; Look</h2>
-      <div class="settings-form">
-        <div>
-          <label for="setSectionTitle">Carousel heading</label>
-          <input type="text" id="setSectionTitle" />
+      <div class="card">
+        <h3>Bonuses by category</h3>
+        <div class="stats" style="margin: 0;">
+          <div class="stat"><div class="n" id="stSport">0</div><div class="l">Sport</div></div>
+          <div class="stat"><div class="n" id="stCasino">0</div><div class="l">Casino</div></div>
+          <div class="stat"><div class="n" id="stLive">0</div><div class="l">Live Casino</div></div>
         </div>
-        <div>
-          <label for="setPageTitle">Main headline</label>
-          <input type="text" id="setPageTitle" />
-        </div>
-        <div>
-          <label for="setPageSubtitle">Subtitle</label>
-          <input type="text" id="setPageSubtitle" />
-        </div>
-        <div>
-          <label>Category tab names</label>
-          <div class="settings-row">
-            <input type="text" id="setTabSport" />
-            <input type="text" id="setTabCasino" />
-            <input type="text" id="setTabLive" />
+      </div>
+
+      <div class="card">
+        <h3>Latest activity</h3>
+        <div id="dashLogs"><p class="empty">Nothing yet.</p></div>
+      </div>
+    </section>
+
+    <!-- ---------- Claims ---------- -->
+    <section class="section" id="s-claims">
+      <h2>Claims</h2>
+      <p class="lede">Every bonus request, and where it stands.</p>
+
+      <div class="filters" id="claimFilters">
+        <button class="active" onclick="filterClaims('')">All</button>
+        <button onclick="filterClaims('new')">New</button>
+        <button onclick="filterClaims('approved')">Approved</button>
+        <button onclick="filterClaims('paid')">Paid</button>
+        <button onclick="filterClaims('rejected')">Rejected</button>
+      </div>
+
+      <div id="claimsList"><p class="empty">No claims yet.</p></div>
+    </section>
+
+    <!-- ---------- Bonuses ---------- -->
+    <section class="section" id="s-bonuses">
+      <h2>Bonuses</h2>
+      <p class="lede">What players can choose from on the main page.</p>
+
+      <div class="card" id="bonusFormCard">
+        <h3 id="bonusFormHeading">➕ Add a bonus</h3>
+        <div class="form">
+          <input type="hidden" id="bonusEditId" value="" />
+          <input type="hidden" id="bonusLogo" value="" />
+
+          <div>
+            <label>Logo</label>
+            <div class="picker">
+              <div class="thumb" id="bonusLogoThumb">🎁</div>
+              <div class="picker-actions">
+                <button type="button" class="btn" onclick="document.getElementById('bonusLogoFile').click()">Upload image</button>
+                <button type="button" class="btn ghost" onclick="clearBonusLogo()">Remove</button>
+              </div>
+              <input type="file" class="file-input" id="bonusLogoFile" accept="image/*" onchange="handleLogoUpload(this)" />
+            </div>
+            <div class="hint">JPG, PNG, GIF or WebP, up to 2 MB. Leave empty to use the category icon.</div>
+            <div class="uploading" id="bonusUploading">Uploading…</div>
           </div>
-        </div>
-        <div>
-          <label for="setClaimButton">Claim button text</label>
-          <input type="text" id="setClaimButton" />
-        </div>
-        <div>
-          <label for="setAccentColor">Accent colour</label>
-          <input type="color" id="setAccentColor" />
-        </div>
-        <button type="button" class="btn-save" onclick="saveSettings()">Save Settings</button>
-        <div class="save-note" id="settingsSaved">✓ Saved — refresh the main page to see it</div>
-      </div>
-    </div>
 
-    <!-- Bonuses List Card -->
-    <div class="admin-card">
-      <h2>💎 Current Bonuses</h2>
-      <div class="bonuses-list" id="bonusesList"></div>
-    </div>
+          <div>
+            <label for="bonusTitle">Title</label>
+            <input type="text" id="bonusTitle" placeholder="Welcome Bonus" />
+          </div>
+          <div>
+            <label for="bonusAmount">Amount</label>
+            <input type="text" id="bonusAmount" placeholder="+100%" />
+          </div>
+          <div>
+            <label for="bonusDescription">Description</label>
+            <textarea id="bonusDescription" placeholder="Match bonus on your first bet"></textarea>
+          </div>
+          <div>
+            <label for="bonusCategory">Category</label>
+            <select id="bonusCategory">
+              <option value="sport">Sport</option>
+              <option value="casino">Casino</option>
+              <option value="livecasino">Live Casino</option>
+            </select>
+          </div>
 
-    <!-- System Info Card -->
-    <div class="admin-card">
-      <h2>ℹ️ System Info</h2>
-      <div class="stat-box">
-        <div class="stat-label">Status</div>
-        <div style="color: var(--color-success); font-weight: 600; margin-top: 4px;">✓ Online</div>
+          <button type="button" class="btn" id="bonusSaveBtn" onclick="saveBonus()">Add bonus</button>
+          <button type="button" class="btn ghost" id="bonusCancelBtn" onclick="cancelEdit()" style="display:none;">Cancel</button>
+        </div>
       </div>
-      <div class="stat-box">
-        <div class="stat-label">Database</div>
-        <div style="color: var(--color-accent); font-weight: 600; margin-top: 4px;">Local Storage</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-label">Last Updated</div>
-        <div style="color: var(--color-text-secondary); margin-top: 4px;" id="lastUpdate">Now</div>
-      </div>
-    </div>
 
-    <!-- Bonus Distribution Card -->
-    <div class="admin-card">
-      <h2>📈 Bonus Distribution</h2>
-      <div id="distribution">
-        <div class="stat-box">
-          <div class="stat-label">Sport Bonuses</div>
-          <div style="color: var(--color-accent); font-weight: 600; margin-top: 4px;" id="sportCount">0</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-label">Casino Bonuses</div>
-          <div style="color: var(--color-accent); font-weight: 600; margin-top: 4px;" id="casinoCount">0</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-label">Live Casino Bonuses</div>
-          <div style="color: var(--color-accent); font-weight: 600; margin-top: 4px;" id="livecasinoCount">0</div>
+      <div class="bonus-grid" id="bonusList"></div>
+    </section>
+
+    <!-- ---------- Slider ---------- -->
+    <section class="section" id="s-slider">
+      <h2>Slider</h2>
+      <p class="lede">The five images in the carousel at the top of the page.</p>
+      <div class="slots" id="slotList"></div>
+      <input type="file" class="file-input" id="slotFile" accept="image/*" onchange="handleSlotUpload(this)" />
+    </section>
+
+    <!-- ---------- Settings ---------- -->
+    <section class="section" id="s-settings">
+      <h2>Page Text &amp; Look</h2>
+      <p class="lede">Wording and colour on the main page. Saved instantly, no deploy.</p>
+
+      <div class="card">
+        <div class="form">
+          <div><label for="setSectionTitle">Carousel heading</label><input type="text" id="setSectionTitle" /></div>
+          <div><label for="setPageTitle">Main headline</label><input type="text" id="setPageTitle" /></div>
+          <div><label for="setPageSubtitle">Subtitle</label><input type="text" id="setPageSubtitle" /></div>
+          <div>
+            <label>Category tab names</label>
+            <div class="row3">
+              <input type="text" id="setTabSport" />
+              <input type="text" id="setTabCasino" />
+              <input type="text" id="setTabLive" />
+            </div>
+          </div>
+          <div><label for="setClaimButton">Claim button text</label><input type="text" id="setClaimButton" /></div>
+          <div><label for="setAccentColor">Accent colour</label><input type="color" id="setAccentColor" /></div>
+          <button type="button" class="btn" onclick="saveSettings()">Save settings</button>
+          <div class="note" id="settingsSaved">✓ Saved — refresh the main page to see it</div>
         </div>
       </div>
-    </div>
-  </div>
+    </section>
+
+    <!-- ---------- Logs ---------- -->
+    <section class="section" id="s-logs">
+      <h2>Logs</h2>
+      <p class="lede">Admin activity, claim history, failed sign-ins and errors.</p>
+
+      <div class="filters" id="logFilters">
+        <button class="active" onclick="filterLogs('')">Everything</button>
+        <button onclick="filterLogs('info')">Activity</button>
+        <button onclick="filterLogs('warning')">Warnings</button>
+        <button onclick="filterLogs('error')">Errors</button>
+      </div>
+
+      <div class="card">
+        <div class="log-wrap" id="logList"><p class="empty">Nothing logged yet.</p></div>
+      </div>
+
+      <button type="button" class="btn ghost" onclick="clearLogs()">Clear the log</button>
+    </section>
+  </main>
 </div>
 
 <script>
-// The password is NOT in this file. It lives in api/config.php on the server and
-// is checked by api/login.php, which starts a PHP session on success.
-let isLoggedIn = false;
-let claims = [];
-let bonuses = [];
-let settings = {};
+/* The password is not in this file. api/login.php checks it against
+   api/config.php on the server and starts a PHP session. */
 
 const API = {
-  claims: "/api/claims.php",
-  bonuses: "/api/bonuses.php",
+  claims:   "/api/claims.php",
+  bonuses:  "/api/bonuses.php",
   settings: "/api/settings.php",
-  login: "/api/login.php"
+  slider:   "/api/slider.php",
+  logs:     "/api/logs.php",
+  upload:   "/api/upload.php",
+  login:    "/api/login.php"
 };
 
-// Everything rendered below came from somewhere else — bonus text from the admin,
-// but usernames straight off the main page's URL parameters. Escape all of it, or
-// a claim made with a username like "<img src=x onerror=...>" runs script in here.
+let claims = [], bonuses = [], settings = {}, slides = [], logs = [];
+let statusCounts = { new: 0, approved: 0, paid: 0, rejected: 0 };
+let claimFilter = "", logFilter = "", editingSlot = null;
+
+const STATUSES = ["new", "approved", "paid", "rejected"];
+const LABELS = { new: "New", approved: "Approved", paid: "Paid", rejected: "Rejected" };
+const CAT_ICON = { sport: "⚽", casino: "🎰", livecasino: "🃏" };
+
+/* Claim usernames come straight from the main page's URL parameters, so every
+   interpolated value here is escaped. */
 function esc(s) {
   return String(s ?? "").replace(/[&<>"']/g, c => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
   }[c]));
 }
 
-// Pull claims + bonuses from the server database
-async function loadData() {
-  try {
-    const [claimsHttp, bonusesHttp] = await Promise.all([
-      fetch(API.claims + "?limit=200"),
-      fetch(API.bonuses)
-    ]);
-
-    // Session expired or never established — back to the login screen.
-    if (claimsHttp.status === 401) {
-      adminLogout();
-      return;
-    }
-
-    const claimsRes  = await claimsHttp.json();
-    const bonusesRes = await bonusesHttp.json();
-
-    if (claimsRes.error) throw new Error(claimsRes.error);
-    if (bonusesRes.error) throw new Error(bonusesRes.error);
-
-    claims = claimsRes.claims || [];
-    bonuses = bonusesRes.bonuses || [];
-    showApiError("");
-
-    // Settings are fetched separately and never fatal: if settings.php has not
-    // been deployed yet, claims and bonuses must still work.
-    try {
-      const settingsRes = await fetch(API.settings).then(r => r.json());
-      settings = settingsRes.settings || {};
-      fillSettingsForm();
-    } catch (e) {
-      console.warn("Settings unavailable (is api/settings.php deployed?):", e);
-    }
-  } catch (err) {
-    console.error("Could not load data from server:", err);
-    showApiError("Cannot reach the database. Check api/config.php credentials on the server.");
-  }
-  loadDashboard();
-}
-
-function showApiError(msg) {
-  let bar = document.getElementById("apiError");
-  if (!bar) {
-    bar = document.createElement("div");
-    bar.id = "apiError";
-    bar.style.cssText = "display:none;background:#3a1f26;border:1px solid #ff6b6b;color:#ff9b9b;" +
-      "padding:12px 16px;border-radius:8px;margin-bottom:20px;font-size:13px;";
-    const panel = document.getElementById("adminPanel");
-    if (panel) panel.insertBefore(bar, panel.firstChild);
-  }
-  bar.textContent = msg;
-  bar.style.display = msg ? "block" : "none";
-}
-
+/* ---------- Auth ---------- */
 function adminLogin() {
   const user = document.getElementById("adminUser").value.trim();
   const pass = document.getElementById("adminPass").value;
-  const error = document.getElementById("loginError");
+  const err  = document.getElementById("loginError");
 
   fetch(API.login, {
     method: "POST",
@@ -713,30 +535,27 @@ function adminLogin() {
   })
     .then(r => r.json().then(res => ({ ok: r.ok, res })))
     .then(({ ok, res }) => {
-      if (!ok || res.error) throw new Error(res.error || "Login failed");
+      if (!ok || res.error) throw new Error(res.error || "Sign-in failed");
       openPanel(user);
     })
-    .catch(err => {
-      error.textContent = err.message;
-      error.style.display = "block";
-      setTimeout(() => error.style.display = "none", 3000);
+    .catch(e => {
+      err.textContent = e.message;
+      err.style.display = "block";
+      setTimeout(() => err.style.display = "none", 3500);
     });
 }
 
 function openPanel(username) {
-  isLoggedIn = true;
   document.getElementById("adminUsername").textContent = username;
   document.getElementById("adminPass").value = "";
   document.getElementById("loginModal").style.display = "none";
   document.getElementById("adminPanel").classList.add("show");
-  loadData();
+  loadAll();
 }
 
 function adminLogout() {
   fetch(API.login, { method: "DELETE" }).finally(() => {
-    isLoggedIn = false;
-    claims = [];
-    bonuses = [];
+    claims = []; bonuses = []; logs = []; slides = [];
     document.getElementById("adminUser").value = "";
     document.getElementById("adminPass").value = "";
     document.getElementById("loginModal").style.display = "flex";
@@ -744,31 +563,255 @@ function adminLogout() {
   });
 }
 
-// Already logged in from an earlier visit? Skip the login screen.
 function checkSession() {
-  fetch(API.login)
-    .then(r => r.json())
+  fetch(API.login).then(r => r.json())
     .then(res => { if (res.loggedIn) openPanel("admin"); })
     .catch(() => {});
 }
 
-// One form does both jobs — on a phone there is no room for two.
-function saveBonus() {
-  const editId      = document.getElementById("bonusEditId").value;
-  const title       = document.getElementById("bonusTitle").value.trim();
-  const amount      = document.getElementById("bonusAmount").value.trim();
-  const description = document.getElementById("bonusDescription").value.trim();
-  const category    = document.getElementById("bonusCategory").value;
+/* ---------- Navigation ---------- */
+function showSection(name) {
+  document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+  document.getElementById("s-" + name).classList.add("active");
+  document.querySelectorAll("#nav button").forEach(b =>
+    b.classList.toggle("active", b.dataset.section === name));
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
 
-  if (!title || !amount || !description) {
-    alert("Please fill in all fields");
+/* ---------- Loading ---------- */
+async function loadAll() {
+  try {
+    const [claimsHttp, bonusesHttp] = await Promise.all([
+      fetch(API.claims + "?limit=300"),
+      fetch(API.bonuses)
+    ]);
+
+    if (claimsHttp.status === 401) { adminLogout(); return; }
+
+    const c = await claimsHttp.json();
+    const b = await bonusesHttp.json();
+    if (c.error) throw new Error(c.error);
+    if (b.error) throw new Error(b.error);
+
+    claims = c.claims || [];
+    statusCounts = c.statusCounts || statusCounts;
+    bonuses = b.bonuses || [];
+    apiError("");
+  } catch (e) {
+    console.error(e);
+    apiError("Cannot reach the database. Check api/config.php on the server.");
+  }
+
+  /* Each of these is optional — a section that has not been deployed yet must
+     not take the whole panel down with it. */
+  await Promise.all([
+    fetch(API.settings).then(r => r.json())
+      .then(r => { settings = r.settings || {}; fillSettings(); })
+      .catch(e => console.warn("settings unavailable:", e)),
+    fetch(API.slider).then(r => r.json())
+      .then(r => { slides = r.slides || []; })
+      .catch(e => console.warn("slider unavailable:", e)),
+    fetch(API.logs + "?limit=200").then(r => r.json())
+      .then(r => { logs = r.logs || []; })
+      .catch(e => console.warn("logs unavailable:", e))
+  ]);
+
+  render();
+}
+
+function apiError(msg) {
+  const el = document.getElementById("apiError");
+  el.textContent = msg;
+  el.style.display = msg ? "block" : "none";
+}
+
+/* ---------- Render ---------- */
+function render() {
+  renderStats();
+  renderClaims();
+  renderBonuses();
+  renderSlots();
+  renderLogs();
+}
+
+function renderStats() {
+  const uniq = new Set(claims.map(c => c.username)).size;
+  document.getElementById("stTotal").textContent = claims.length;
+  document.getElementById("stUsers").textContent = uniq;
+  document.getElementById("stBonuses").textContent = bonuses.length;
+
+  document.getElementById("stNew").textContent = statusCounts.new || 0;
+  document.getElementById("stApproved").textContent = statusCounts.approved || 0;
+  document.getElementById("stPaid").textContent = statusCounts.paid || 0;
+  document.getElementById("stRejected").textContent = statusCounts.rejected || 0;
+
+  const badge = document.getElementById("navNew");
+  badge.textContent = statusCounts.new || 0;
+  badge.classList.toggle("zero", !statusCounts.new);
+
+  const by = c => bonuses.filter(b => b.category === c).length;
+  document.getElementById("stSport").textContent = by("sport");
+  document.getElementById("stCasino").textContent = by("casino");
+  document.getElementById("stLive").textContent = by("livecasino");
+
+  document.getElementById("dashLogs").innerHTML = logs.length
+    ? logs.slice(0, 8).map(logRow).join("")
+    : '<p class="empty">Nothing yet.</p>';
+}
+
+function renderClaims() {
+  const list = document.getElementById("claimsList");
+  const rows = claimFilter ? claims.filter(c => c.status === claimFilter) : claims;
+
+  if (!rows.length) {
+    list.innerHTML = '<p class="empty">No claims here.</p>';
     return;
   }
 
-  const editing = editId !== "";
+  list.innerHTML = rows.map(c => {
+    const st = STATUSES.includes(c.status) ? c.status : "new";
+    return `
+      <div class="claim s-${st}">
+        <div class="claim-top">
+          <span class="claim-user">${esc(c.username)}</span>
+          <span class="claim-id">ID ${esc(c.user_id)}</span>
+          <span class="pill ${st}">${LABELS[st]}</span>
+        </div>
+        <div class="claim-bonus">${esc(c.bonus_title)} ${esc(c.bonus_amount)}</div>
+        <div class="claim-time">${esc(c.created_at)}</div>
+        <div class="status-btns">
+          ${STATUSES.map(s => s === st
+            ? `<button class="current" disabled>${LABELS[s]}</button>`
+            : `<button onclick="setStatus(${Number(c.id)},'${s}')">${LABELS[s]}</button>`).join("")}
+          <button class="link" onclick="toggleTimeline(${Number(c.id)})">History</button>
+        </div>
+        <div class="timeline" id="tl-${Number(c.id)}"></div>
+      </div>`;
+  }).join("");
+}
+
+function filterClaims(status) {
+  claimFilter = status;
+  document.querySelectorAll("#claimFilters button").forEach(b =>
+    b.classList.toggle("active", b.textContent.toLowerCase() === (status || "all")));
+  renderClaims();
+}
+
+function setStatus(id, status) {
+  fetch(API.claims, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id, status })
+  })
+    .then(r => r.json())
+    .then(res => { if (res.error) throw new Error(res.error); loadAll(); })
+    .catch(e => alert("Could not change status: " + e.message));
+}
+
+function toggleTimeline(id) {
+  const el = document.getElementById("tl-" + id);
+  if (el.classList.contains("open")) { el.classList.remove("open"); return; }
+
+  el.classList.add("open");
+  el.innerHTML = '<div class="row">Loading…</div>';
+
+  fetch(API.logs + "?ref=" + id + "&limit=50")
+    .then(r => r.json())
+    .then(res => {
+      const rows = (res.logs || []).filter(l => String(l.action).startsWith("claim."));
+      el.innerHTML = rows.length
+        ? rows.reverse().map(l =>
+            `<div class="row">${esc(l.created_at)} — <b>${esc(l.detail)}</b></div>`).join("")
+        : '<div class="row">No history recorded.</div>';
+    })
+    .catch(() => { el.innerHTML = '<div class="row">Could not load history.</div>'; });
+}
+
+function renderBonuses() {
+  const list = document.getElementById("bonusList");
+  const editing = document.getElementById("bonusEditId").value;
+
+  if (!bonuses.length) {
+    list.innerHTML = '<p class="empty">No bonuses yet — add one above.</p>';
+    return;
+  }
+
+  list.innerHTML = bonuses.map(b => `
+    <div class="bonus${String(b.id) === String(editing) ? " editing" : ""}">
+      <div class="bonus-head">
+        <div class="thumb">${logoHtml(b)}</div>
+        <div>
+          <div class="bonus-title">${esc(b.title)}</div>
+          <div class="bonus-amount">${esc(b.amount)}</div>
+          <div class="bonus-cat">${esc(b.category)}</div>
+        </div>
+      </div>
+      <div class="bonus-actions">
+        <button onclick="startEdit(${Number(b.id)})">Edit</button>
+        <button class="danger" onclick="deleteBonus(${Number(b.id)})">Delete</button>
+      </div>
+    </div>`).join("");
+}
+
+function logoHtml(b) {
+  if (b.logo && /^[0-9a-f]{32}\.(jpg|jpeg|png|gif|webp)$/i.test(b.logo)) {
+    return `<img src="/uploads/${esc(b.logo)}" alt="">`;
+  }
+  if (b.logo) return esc(b.logo);
+  return CAT_ICON[b.category] || "🎁";
+}
+
+/* ---------- Uploads ---------- */
+function uploadImage(file, busyId) {
+  const busy = busyId ? document.getElementById(busyId) : null;
+  if (busy) busy.classList.add("on");
+
+  const fd = new FormData();
+  fd.append("file", file);
+
+  return fetch(API.upload, { method: "POST", body: fd })
+    .then(r => r.json())
+    .then(res => {
+      if (res.error) throw new Error(res.error);
+      return res.file;
+    })
+    .finally(() => { if (busy) busy.classList.remove("on"); });
+}
+
+function handleLogoUpload(input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+
+  uploadImage(file, "bonusUploading")
+    .then(name => {
+      document.getElementById("bonusLogo").value = name;
+      document.getElementById("bonusLogoThumb").innerHTML = `<img src="/uploads/${name}" alt="">`;
+    })
+    .catch(e => alert("Upload failed: " + e.message))
+    .finally(() => { input.value = ""; });
+}
+
+function clearBonusLogo() {
+  document.getElementById("bonusLogo").value = "";
+  const cat = document.getElementById("bonusCategory").value;
+  document.getElementById("bonusLogoThumb").textContent = CAT_ICON[cat] || "🎁";
+}
+
+/* ---------- Bonus form ---------- */
+function saveBonus() {
+  const id    = document.getElementById("bonusEditId").value;
+  const title = document.getElementById("bonusTitle").value.trim();
+  const amount = document.getElementById("bonusAmount").value.trim();
+  const description = document.getElementById("bonusDescription").value.trim();
+  const category = document.getElementById("bonusCategory").value;
+  const logo = document.getElementById("bonusLogo").value;
+
+  if (!title || !amount || !description) { alert("Please fill in all fields"); return; }
+
+  const editing = id !== "";
   const payload = editing
-    ? { id: Number(editId), title, amount, description, category }
-    : { title, amount, description, category };
+    ? { id: Number(id), title, amount, description, category, logo }
+    : { title, amount, description, category, logo };
 
   fetch(API.bonuses, {
     method: editing ? "PUT" : "POST",
@@ -776,84 +819,132 @@ function saveBonus() {
     body: JSON.stringify(payload)
   })
     .then(r => r.json())
-    .then(res => {
-      if (res.error) throw new Error(res.error);
-      cancelEdit();
-      loadData();
-    })
-    .catch(err => alert("❌ Could not save bonus: " + err.message));
+    .then(res => { if (res.error) throw new Error(res.error); cancelEdit(); loadAll(); })
+    .catch(e => alert("Could not save: " + e.message));
 }
 
 function startEdit(id) {
   const b = bonuses.find(x => Number(x.id) === Number(id));
   if (!b) return;
 
-  document.getElementById("bonusEditId").value      = b.id;
-  document.getElementById("bonusTitle").value       = b.title;
-  document.getElementById("bonusAmount").value      = b.amount;
+  document.getElementById("bonusEditId").value = b.id;
+  document.getElementById("bonusTitle").value = b.title;
+  document.getElementById("bonusAmount").value = b.amount;
   document.getElementById("bonusDescription").value = b.description;
-  document.getElementById("bonusCategory").value    = b.category;
+  document.getElementById("bonusCategory").value = b.category;
+  document.getElementById("bonusLogo").value = b.logo || "";
+  document.getElementById("bonusLogoThumb").innerHTML = logoHtml(b);
 
-  document.getElementById("bonusFormHeading").textContent = "✏️ Edit Bonus";
-  document.getElementById("bonusSaveBtn").textContent = "Save Changes";
+  document.getElementById("bonusFormHeading").textContent = "✏️ Edit bonus";
+  document.getElementById("bonusSaveBtn").textContent = "Save changes";
   document.getElementById("bonusCancelBtn").style.display = "block";
 
-  loadDashboard(); // re-render so the edited row highlights
+  renderBonuses();
+  showSection("bonuses");
   document.getElementById("bonusFormCard").scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
 function cancelEdit() {
-  document.getElementById("bonusEditId").value      = "";
-  document.getElementById("bonusTitle").value       = "";
-  document.getElementById("bonusAmount").value      = "";
+  document.getElementById("bonusEditId").value = "";
+  document.getElementById("bonusTitle").value = "";
+  document.getElementById("bonusAmount").value = "";
   document.getElementById("bonusDescription").value = "";
-  document.getElementById("bonusCategory").value    = "sport";
+  document.getElementById("bonusCategory").value = "sport";
+  clearBonusLogo();
 
-  document.getElementById("bonusFormHeading").textContent = "➕ Add New Bonus";
-  document.getElementById("bonusSaveBtn").textContent = "Add Bonus";
+  document.getElementById("bonusFormHeading").textContent = "➕ Add a bonus";
+  document.getElementById("bonusSaveBtn").textContent = "Add bonus";
   document.getElementById("bonusCancelBtn").style.display = "none";
 
-  loadDashboard();
+  renderBonuses();
 }
 
 function deleteBonus(id) {
   const b = bonuses.find(x => Number(x.id) === Number(id));
   if (!b) return;
-  if (!confirm(`Delete "${b.title}"?\n\nIt will disappear from the main page. Claims already made are kept.`)) return;
+  if (!confirm(`Delete "${b.title}"?\n\nIt disappears from the main page. Existing claims are kept.`)) return;
 
   fetch(API.bonuses + "?id=" + encodeURIComponent(id), { method: "DELETE" })
     .then(r => r.json())
     .then(res => {
       if (res.error) throw new Error(res.error);
       if (String(document.getElementById("bonusEditId").value) === String(id)) cancelEdit();
-      loadData();
+      loadAll();
     })
-    .catch(err => alert("❌ Could not delete bonus: " + err.message));
+    .catch(e => alert("Could not delete: " + e.message));
 }
 
+/* ---------- Slider ---------- */
+function renderSlots() {
+  const list = document.getElementById("slotList");
+  const byPos = {};
+  slides.forEach(s => byPos[s.position] = s);
+
+  let html = "";
+  for (let i = 1; i <= 5; i++) {
+    const s = byPos[i] || {};
+    const inner = s.image
+      ? `<img src="/uploads/${esc(s.image)}" alt="">`
+      : esc(s.emoji || "🎲");
+
+    html += `
+      <div class="slot">
+        <div class="slot-n">Slot ${i}</div>
+        <div class="thumb">${inner}</div>
+        <div class="picker-actions">
+          <button type="button" class="btn" onclick="pickSlot(${i})">Upload</button>
+        </div>
+        <div class="uploading" id="slotUploading${i}">Uploading…</div>
+      </div>`;
+  }
+  list.innerHTML = html;
+}
+
+function pickSlot(pos) {
+  editingSlot = pos;
+  document.getElementById("slotFile").click();
+}
+
+function handleSlotUpload(input) {
+  const file = input.files && input.files[0];
+  if (!file || !editingSlot) return;
+
+  const pos = editingSlot;
+  uploadImage(file, "slotUploading" + pos)
+    .then(name => fetch(API.slider, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ position: pos, image: name })
+    }).then(r => r.json()))
+    .then(res => { if (res.error) throw new Error(res.error); loadAll(); })
+    .catch(e => alert("Could not set the slide: " + e.message))
+    .finally(() => { input.value = ""; editingSlot = null; });
+}
+
+/* ---------- Settings ---------- */
 const SETTING_FIELDS = {
-  section_title:  "setSectionTitle",
-  page_title:     "setPageTitle",
-  page_subtitle:  "setPageSubtitle",
-  tab_sport:      "setTabSport",
-  tab_casino:     "setTabCasino",
+  section_title: "setSectionTitle",
+  page_title: "setPageTitle",
+  page_subtitle: "setPageSubtitle",
+  tab_sport: "setTabSport",
+  tab_casino: "setTabCasino",
   tab_livecasino: "setTabLive",
-  claim_button:   "setClaimButton",
-  accent_color:   "setAccentColor"
+  claim_button: "setClaimButton",
+  accent_color: "setAccentColor"
 };
 
-function fillSettingsForm() {
-  for (const [key, elId] of Object.entries(SETTING_FIELDS)) {
-    const el = document.getElementById(elId);
-    if (el && settings[key] != null) el.value = settings[key];
+function fillSettings() {
+  for (const [k, id] of Object.entries(SETTING_FIELDS)) {
+    const el = document.getElementById(id);
+    if (el && settings[k] != null) el.value = settings[k];
   }
 }
 
 function saveSettings() {
   const payload = {};
-  for (const [key, elId] of Object.entries(SETTING_FIELDS)) {
-    const el = document.getElementById(elId);
-    if (el) payload[key] = el.value;
+  for (const [k, id] of Object.entries(SETTING_FIELDS)) {
+    const el = document.getElementById(id);
+    if (el) payload[k] = el.value;
   }
 
   fetch(API.settings, {
@@ -865,63 +956,55 @@ function saveSettings() {
     .then(res => {
       if (res.error) throw new Error(res.error);
       const note = document.getElementById("settingsSaved");
-      note.style.display = "block";
-      setTimeout(() => note.style.display = "none", 4000);
-      loadData();
+      note.classList.add("on");
+      setTimeout(() => note.classList.remove("on"), 4000);
+      loadAll();
     })
-    .catch(err => alert("❌ Could not save settings: " + err.message));
+    .catch(e => alert("Could not save settings: " + e.message));
 }
 
-function loadDashboard() {
-  const uniqueUsers = new Set(claims.map(c => c.username)).size;
-  document.getElementById("totalClaims").textContent = claims.length;
-  document.getElementById("totalUsers").textContent = uniqueUsers;
-
-  const claimsList = document.getElementById("claimsList");
-  if (claims.length === 0) {
-    claimsList.innerHTML = '<p style="color: var(--color-text-secondary); font-size: 12px;">No claims yet</p>';
-  } else {
-    claimsList.innerHTML = claims.map(claim => `
-      <div class="claim-item">
-        <div class="claim-user">${esc(claim.username)} <span style="color: var(--color-text-secondary); font-weight: 400;">(ID: ${esc(claim.user_id)})</span></div>
-        <div class="claim-bonus">${esc(claim.bonus_title)} ${esc(claim.bonus_amount)}</div>
-        <div class="claim-time">${esc(claim.created_at)}</div>
+/* ---------- Logs ---------- */
+function logRow(l) {
+  return `
+    <div class="log ${esc(l.level)}">
+      <div class="when">${esc(l.created_at)}</div>
+      <div class="what">
+        ${esc(l.detail || l.action)}
+        <div class="act">${esc(l.actor)} · ${esc(l.action)}${l.ip ? " · " + esc(l.ip) : ""}</div>
       </div>
-    `).join("");
-  }
-
-  const bonusesList = document.getElementById("bonusesList");
-  const editingId = document.getElementById("bonusEditId").value;
-
-  if (bonuses.length === 0) {
-    bonusesList.innerHTML = '<p style="color: var(--color-text-secondary); font-size: 12px;">No bonuses yet — add one above.</p>';
-  } else {
-    bonusesList.innerHTML = bonuses.map(bonus => `
-      <div class="bonus-item${String(bonus.id) === String(editingId) ? " editing" : ""}">
-        <div class="bonus-item-title">${esc(bonus.title)}</div>
-        <div class="bonus-item-amount">${esc(bonus.amount)}</div>
-        <div class="bonus-item-cat">${esc(bonus.category)}</div>
-        <div class="bonus-item-actions">
-          <button type="button" onclick="startEdit(${Number(bonus.id)})">Edit</button>
-          <button type="button" class="danger" onclick="deleteBonus(${Number(bonus.id)})">Delete</button>
-        </div>
-      </div>
-    `).join("");
-  }
-
-  const sportCount = bonuses.filter(b => b.category === "sport").length;
-  const casinoCount = bonuses.filter(b => b.category === "casino").length;
-  const livecasinoCount = bonuses.filter(b => b.category === "livecasino").length;
-
-  document.getElementById("totalBonuses").textContent = bonuses.length;
-  document.getElementById("sportCount").textContent = sportCount;
-  document.getElementById("casinoCount").textContent = casinoCount;
-  document.getElementById("livecasinoCount").textContent = livecasinoCount;
-  document.getElementById("lastUpdate").textContent = new Date().toLocaleTimeString();
+    </div>`;
 }
 
-// Initialize
-loadDashboard();
+function renderLogs() {
+  const list = document.getElementById("logList");
+  const rows = logFilter ? logs.filter(l => l.level === logFilter) : logs;
+  list.innerHTML = rows.length ? rows.map(logRow).join("") : '<p class="empty">Nothing logged yet.</p>';
+}
+
+function filterLogs(level) {
+  logFilter = level;
+  const label = level === "" ? "everything" : (level === "info" ? "activity" : level + "s");
+  document.querySelectorAll("#logFilters button").forEach(b =>
+    b.classList.toggle("active", b.textContent.toLowerCase() === label));
+  renderLogs();
+}
+
+function clearLogs() {
+  if (!confirm("Clear the whole activity log?\n\nThis cannot be undone.")) return;
+  fetch(API.logs, { method: "DELETE" })
+    .then(r => r.json())
+    .then(res => { if (res.error) throw new Error(res.error); loadAll(); })
+    .catch(e => alert("Could not clear the log: " + e.message));
+}
+
+/* ---------- Go ---------- */
+document.getElementById("bonusCategory").addEventListener("change", () => {
+  if (!document.getElementById("bonusLogo").value) clearBonusLogo();
+});
+document.getElementById("adminPass").addEventListener("keydown", e => {
+  if (e.key === "Enter") adminLogin();
+});
+
 checkSession();
 </script>
 

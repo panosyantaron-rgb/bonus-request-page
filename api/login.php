@@ -19,9 +19,14 @@ if ($method === 'POST') {
     if (hash_equals(ADMIN_USER, $user) && hash_equals(ADMIN_PASS, $pass)) {
         session_regenerate_id(true);
         $_SESSION['is_admin'] = true;
+        activity('login.success', 'Signed in');
         echo json_encode(['ok' => true]);
         exit;
     }
+
+    // Logged as a warning so failed attempts stand out in the Logs section.
+    // The attempted username is recorded; the attempted password never is.
+    activity('login.failed', 'Failed sign-in for username: ' . mb_substr($user, 0, 64), 'warning');
 
     sleep(1); // slow down brute-force guessing
     http_response_code(401);
@@ -31,6 +36,7 @@ if ($method === 'POST') {
 
 // ---- Log out ----
 if ($method === 'DELETE') {
+    if (is_admin()) activity('logout', 'Signed out');
     $_SESSION = [];
     session_destroy();
     echo json_encode(['ok' => true]);

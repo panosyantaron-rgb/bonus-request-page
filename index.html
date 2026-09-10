@@ -405,6 +405,24 @@
       text-align: center;
     }
 
+    /* Uploaded logos sit in the same box the emoji used, so a card keeps its
+       shape whether it has an image or not. */
+    .card-logo {
+      max-width: 100%;
+      max-height: 90px;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto;
+    }
+
+    .slide-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: inherit;
+      display: block;
+    }
+
     .card-content {
       padding: 24px;
     }
@@ -808,6 +826,38 @@ function esc(s) {
   }[c]));
 }
 
+// A bonus logo is either an uploaded image, an emoji, or nothing — in which case
+// the category icon is used. Uploaded names are always 32 hex characters.
+function logoHtml(b, icons) {
+  if (b.logo && /^[0-9a-f]{32}\.(jpg|jpeg|png|gif|webp)$/i.test(b.logo)) {
+    return `<img src="/uploads/${esc(b.logo)}" alt="" class="card-logo">`;
+  }
+  if (b.logo) return esc(b.logo);
+  return icons[b.category] || "🎁";
+}
+
+// The five carousel slots, each an uploaded image or an emoji.
+function loadSliderFromServer() {
+  fetch("/api/slider.php")
+    .then(r => r.json())
+    .then(res => {
+      if (!res.slides || !res.slides.length) return;
+
+      const items = document.querySelectorAll(".carousel-item");
+      res.slides.forEach(s => {
+        const item = items[s.position - 1];
+        if (!item) return;
+
+        if (s.image && /^[0-9a-f]{32}\.(jpg|jpeg|png|gif|webp)$/i.test(s.image)) {
+          item.innerHTML = `<img src="/uploads/${esc(s.image)}" alt="" class="slide-img">`;
+        } else if (s.emoji) {
+          item.innerHTML = `<div>${esc(s.emoji)}</div>`;
+        }
+      });
+    })
+    .catch(err => console.error("Could not load slider:", err));
+}
+
 // Page text and accent colour are editable from the admin panel. If the server
 // is unreachable the wording already in the HTML stays exactly as it is.
 function loadSettings() {
@@ -855,7 +905,7 @@ function loadBonusesFromServer() {
 
       grid.innerHTML = res.bonuses.map(b => `
         <div class="bonus-card" data-category="${esc(b.category)}" onclick="selectBonus(this)"${b.category === activeCategory ? "" : ' data-hidden="true"'}>
-          <div class="card-image"><div class="card-image-placeholder">${ICONS[b.category] || "🎁"}</div></div>
+          <div class="card-image"><div class="card-image-placeholder">${logoHtml(b, ICONS)}</div></div>
           <div class="card-content">
             <h3 class="card-title">${esc(b.title)}</h3>
             <p class="card-description">${esc(b.description)}</p>
@@ -881,6 +931,7 @@ function validateAccess() {
     errorModal.style.display = "none";
     mainContent.classList.add("show");
     loadSettings();
+    loadSliderFromServer();
     loadBonusesFromServer();
     return;
   }
