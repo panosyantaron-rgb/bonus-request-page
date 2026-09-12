@@ -11,22 +11,36 @@ const CLAIM_STATUSES = ['new', 'approved', 'paid', 'rejected'];
 
 // ---- Save a claim (PUBLIC — players are not logged in) ----
 if ($method === 'POST') {
-    $pdo = db();
+    // This is the one unauthenticated write on the site, so it is the obvious
+    // spam/DoS target: throttle it hard per IP before touching the database.
+    rate_limit('claim', 5, 60);      // 5 per minute
+    rate_limit('claim_day', 100, 86400); // and 100 per day
+
     $d = body();
 
-    $username = trim($d['username'] ?? '');
-    $userId   = trim($d['userId'] ?? '');
-    $title    = trim($d['title'] ?? '');
-    $amount   = trim($d['amount'] ?? '');
+    $username    = trim($d['username'] ?? '');
+    $userId      = trim($d['userId'] ?? '');
+    $title       = trim($d['title'] ?? '');
+    $amount      = trim($d['amount'] ?? '');
+    $description = trim($d['description'] ?? '');
 
     if ($username === '' || $userId === '') fail('username and userId are required');
     if ($title === '')                      fail('bonus title is required');
 
+    // Length caps: stop a claim from being used to store 60 KB blobs, and keep
+    // each field inside its column so a strict-mode insert can't error out.
+    if (mb_strlen($username) > 100)   fail('username is too long');
+    if (mb_strlen($userId) > 100)     fail('id is too long');
+    if (mb_strlen($title) > 150)      fail('bonus title is too long');
+    if (mb_strlen($amount) > 40)      fail('bonus amount is too long');
+    if (mb_strlen($description) > 500) $description = mb_substr($description, 0, 500);
+
+    $pdo = db();
     $stmt = $pdo->prepare(
         "INSERT INTO claims (username, user_id, bonus_title, bonus_amount, bonus_description)
          VALUES (?, ?, ?, ?, ?)"
     );
-    $stmt->execute([$username, $userId, $title, $amount, trim($d['description'] ?? '')]);
+    $stmt->execute([$username, $userId, $title, $amount, $description]);
     $newId = (int) $pdo->lastInsertId();
 
     // Start of this claim's timeline

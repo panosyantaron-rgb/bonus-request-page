@@ -12,6 +12,12 @@ if ($method === 'GET') {
 
 // ---- Log in ----
 if ($method === 'POST') {
+    // Per-IP lockout instead of a sleep(). The old sleep(1) held a PHP worker for
+    // a full second per attempt, so a burst of bad logins could tie up every
+    // worker and take the site down — the anti-brute-force measure was itself a
+    // DoS lever. This throttles without occupying a worker: 10 tries per 15 min.
+    rate_limit('login', 10, 900);
+
     $d    = body();
     $user = trim($d['username'] ?? '');
     $pass = (string) ($d['password'] ?? '');
@@ -28,7 +34,6 @@ if ($method === 'POST') {
     // The attempted username is recorded; the attempted password never is.
     activity('login.failed', 'Failed sign-in for username: ' . mb_substr($user, 0, 64), 'warning');
 
-    sleep(1); // slow down brute-force guessing
     http_response_code(401);
     echo json_encode(['error' => 'Invalid username or password']);
     exit;

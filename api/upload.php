@@ -89,9 +89,13 @@ if ($method === 'POST') {
     // dimensions. Sanity-check the size, then make GD actually decode the
     // image — a fake cannot survive that.
     [$w, $h] = $info;
-    if ($w < 1 || $h < 1 || $w > 10000 || $h > 10000) {
-        activity('upload.rejected', "Rejected an image claiming impossible dimensions ({$w}x{$h})", 'warning');
-        fail('That file is not a valid image');
+    // Cap dimensions AND total pixels. A 10000x10000 image is ~400 MB once GD
+    // decodes it below — enough to OOM the worker even though the file is tiny
+    // (a decompression bomb). 25 megapixels keeps the decode within a normal
+    // PHP memory_limit.
+    if ($w < 1 || $h < 1 || $w > 10000 || $h > 10000 || ($w * $h) > 25000000) {
+        activity('upload.rejected', "Rejected an oversized image ({$w}x{$h})", 'warning');
+        fail('That image is too large in dimensions');
     }
 
     if (function_exists('imagecreatefromstring')) {

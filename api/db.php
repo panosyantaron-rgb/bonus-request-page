@@ -11,6 +11,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
+// Bump this whenever the schema or seeds change. db() runs the full bootstrap
+// only when the stored version is behind this; otherwise it does a single cheap
+// probe and returns. Before, every request re-ran ~25 setup queries.
+const SCHEMA_VERSION = 3;
+
 // Add a column only if it is missing, so an existing database upgrades itself.
 // $table/$column/$definition are hardcoded by us and never come from a request.
 function ensure_column(PDO $pdo, $table, $column, $definition) {
@@ -64,6 +69,18 @@ function db($fatal = true) {
     // the 3-byte ⚽ survived. Any emoji a player types would hit the same wall.
     $pdo->exec("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
 
+    // ---- Fast path ----
+    // Once the database is set up, this single query is the ONLY setup cost per
+    // request. Everything below runs only on a fresh or out-of-date database.
+    // The query throws on a brand-new install (no settings table yet), which the
+    // catch turns into "run the full bootstrap".
+    try {
+        $v = (int) $pdo->query("SELECT setting_value FROM settings WHERE setting_key = 'schema_version'")->fetchColumn();
+        if ($v >= SCHEMA_VERSION) return $pdo;
+    } catch (Throwable $e) {
+        // settings table absent — fall through to the full bootstrap
+    }
+
     // Auto-create tables on first run
     $pdo->exec("CREATE TABLE IF NOT EXISTS claims (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -105,6 +122,14 @@ function db($fatal = true) {
         body TEXT NOT NULL,
         created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         INDEX idx_claim (claim_id, id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+    // Per-IP counters for rate limiting. One row per active IP+bucket; old rows
+    // are swept in rate_limit(). Bounded, unlike a log.
+    $pdo->exec("CREATE TABLE IF NOT EXISTS rate_limits (
+        rkey VARCHAR(190) PRIMARY KEY,
+        hits INT NOT NULL DEFAULT 0,
+        window_start DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
     $pdo->exec("CREATE TABLE IF NOT EXISTS activity_log (
@@ -170,10 +195,6 @@ function db($fatal = true) {
         );
         foreach ($repair as $pos => $e) $fix->execute([$e, $pos]);
 
-        $pdo->prepare(
-            "INSERT INTO settings (setting_key, setting_value) VALUES ('schema_version', '2')
-             ON DUPLICATE KEY UPDATE setting_value = '2'"
-        )->execute();
     }
 
     // Seed the 9 default bonuses once, only if the table is empty
@@ -194,7 +215,57 @@ function db($fatal = true) {
         foreach ($defaults as $b) $stmt->execute($b);
     }
 
+    // Mark the database current. The fast path above trusts this on the next
+    // request, so it must be the last thing the bootstrap does.
+    $pdo->prepare(
+        "INSERT INTO settings (setting_key, setting_value) VALUES ('schema_version', ?)
+         ON DUPLICATE KEY UPDATE setting_value = ?"
+    )->execute([(string) SCHEMA_VERSION, (string) SCHEMA_VERSION]);
+
     return $pdo;
+}
+
+/**
+ * Per-IP rate limit. Counts requests to $bucket from the caller's IP within a
+ * rolling $seconds window and ends the request with 429 once $max is exceeded.
+ *
+ * Uses REMOTE_ADDR, never X-Forwarded-For — the latter is attacker-controlled,
+ * so trusting it would let anyone reset their own limit by forging a header.
+ * On a proxied host this may group users behind one address; that is the safe
+ * direction to err for abuse control.
+ */
+function rate_limit($bucket, $max, $seconds) {
+    $ip   = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    $rkey = mb_substr($bucket . ':' . $ip, 0, 190);
+
+    try {
+        $pdo = db();
+
+        // Reset the window if it has expired, otherwise increment — in one atomic
+        // statement so concurrent requests cannot both see a stale count.
+        $stmt = $pdo->prepare(
+            "INSERT INTO rate_limits (rkey, hits, window_start) VALUES (?, 1, NOW())
+             ON DUPLICATE KEY UPDATE
+               hits = IF(window_start < (NOW() - INTERVAL ? SECOND), 1, hits + 1),
+               window_start = IF(window_start < (NOW() - INTERVAL ? SECOND), NOW(), window_start)"
+        );
+        $stmt->execute([$rkey, $seconds, $seconds]);
+
+        $q = $pdo->prepare("SELECT hits FROM rate_limits WHERE rkey = ?");
+        $q->execute([$rkey]);
+        $hits = (int) $q->fetchColumn();
+
+        // Sweep stale rows occasionally so the table stays small
+        if (random_int(1, 100) === 1) {
+            $pdo->exec("DELETE FROM rate_limits WHERE window_start < (NOW() - INTERVAL 1 DAY)");
+        }
+    } catch (Throwable $e) {
+        return; // never let the limiter itself break a legitimate request
+    }
+
+    if ($hits > $max) {
+        fail('Too many requests. Please slow down and try again shortly.', 429);
+    }
 }
 
 /**
@@ -219,6 +290,19 @@ function activity($action, $detail = '', $level = 'info', $refId = null) {
              VALUES (?, ?, ?, ?, ?, ?)"
         );
         $stmt->execute([$level, $actor, $action, mb_substr((string) $detail, 0, 1000), $refId, $ip]);
+
+        // Keep only the most recent ~5000 entries. Runs ~2% of writes so the
+        // trim cost is amortised — without this, claim or login spam could grow
+        // the log until it fills the disk.
+        if (random_int(1, 50) === 1) {
+            $pdo->exec(
+                "DELETE FROM activity_log WHERE id < (
+                     SELECT keep_from FROM (
+                         SELECT MAX(id) - 5000 AS keep_from FROM activity_log
+                     ) AS t
+                 )"
+            );
+        }
     } catch (Throwable $e) {
         // Deliberately silent — a failed log entry is not worth a failed request
     }

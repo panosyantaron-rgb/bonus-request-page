@@ -74,7 +74,12 @@ if ($method === 'POST') {
     $userId   = trim($d['userId'] ?? '');
 
     // Everything checkable without the database is checked first
-    if (!is_admin()) require_identity($username, $userId);
+    if (!is_admin()) {
+        require_identity($username, $userId);
+        // Per-IP ceiling across all claims, on top of the per-claim hourly cap
+        // below — stops one IP spraying questions across many claim ids.
+        rate_limit('message', 20, 3600);
+    }
 
     $pdo = db();
 
